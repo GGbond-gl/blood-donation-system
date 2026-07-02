@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>预约管理 - 献血管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #e53935 0%, #d32f2f 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .nav {
+            background: #333;
+            padding: 10px;
+            text-align: center;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 20px;
+            font-size: 16px;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        .nav a:hover {
+            background: #555;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e53935;
+        }
+        .btn {
+            background: #e53935;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #d32f2f;
+        }
+        .btn-primary {
+            background: #1976d2;
+        }
+        .btn-success {
+            background: #388e3c;
+        }
+        .btn-danger {
+            background: #d32f2f;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        table tr:hover {
+            background: #f5f5f5;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        .modal-content .close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-pending {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        .status-active {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        .status-completed {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .status-canceled {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+        .pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .pagination a {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 0 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+        }
+        .pagination a.active {
+            background: #e53935;
+            color: white;
+            border-color: #e53935;
+        }
+        .message {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .message.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🩸 献血管理系统</h1>
+    </div>
+    
+    <div class="nav">
+        <a href="index.html">首页</a>
+        <a href="activity.html">活动管理</a>
+        <a href="appointment.html">预约管理</a>
+        <a href="donor.html">献血者管理</a>
+        <a href="collection.html">采血记录</a>
+        <a href="stock.html">库存管理</a>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>📋 预约管理</h2>
+            <button class="btn btn-primary" onclick="openAddModal()">+ 新增预约</button>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户ID</th>
+                        <th>活动ID</th>
+                        <th>时段</th>
+                        <th>状态</th>
+                        <th>预约时间</th>
+                        <th>取消时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="appointmentTable">
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #999;">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="appointmentModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>新增预约</h3>
+            <div id="message"></div>
+            <form id="appointmentForm">
+                <div class="form-group">
+                    <label>用户ID</label>
+                    <input type="number" id="userId" required>
+                </div>
+                <div class="form-group">
+                    <label>活动ID</label>
+                    <input type="number" id="activityId" required>
+                </div>
+                <div class="form-group">
+                    <label>预约时段</label>
+                    <select id="timeSlot">
+                        <option value="上午">上午</option>
+                        <option value="下午">下午</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success" style="margin-top: 20px; width: 100%;">提交预约</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let currentPage = 1;
+        let totalPages = 1;
+
+        async function fetchData(url) {
+            try {
+                const response = await fetch(API_BASE + url);
+                const result = await response.json();
+                return result.data;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        async function loadAppointments(page = 1) {
+            currentPage = page;
+            const data = await fetchData(`/appointment/my/list?pageNum=${page}&pageSize=10`);
+            
+            const tbody = document.getElementById('appointmentTable');
+            if (!data || data.records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #999;">暂无数据</td></tr>';
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            totalPages = data.pages;
+            tbody.innerHTML = data.records.map(app => `
+                <tr>
+                    <td>${app.id}</td>
+                    <td>${app.userId}</td>
+                    <td>${app.activityId}</td>
+                    <td>${app.timeSlot}</td>
+                    <td><span class="status-badge ${getStatusClass(app.status)}">${app.status}</span></td>
+                    <td>${app.appointmentTime || '-'}</td>
+                    <td>${app.cancelTime || '-'}</td>
+                    <td>
+                        ${app.status === '待参加' ? `<button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="cancelAppointment(${app.id})">取消</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = `<a href="#" onclick="loadAppointments(1)">首页</a>`;
+            if (currentPage > 1) {
+                html += `<a href="#" onclick="loadAppointments(${currentPage - 1})">上一页</a>`;
+            }
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<a href="#" onclick="loadAppointments(${i})" ${i === currentPage ? 'class="active"' : ''}>${i}</a>`;
+            }
+            if (currentPage < totalPages) {
+                html += `<a href="#" onclick="loadAppointments(${currentPage + 1})">下一页</a>`;
+            }
+            html += `<a href="#" onclick="loadAppointments(${totalPages})">末页</a>`;
+            pagination.innerHTML = html;
+        }
+
+        function openAddModal() {
+            document.getElementById('userId').value = '';
+            document.getElementById('activityId').value = '';
+            document.getElementById('timeSlot').value = '上午';
+            document.getElementById('message').innerHTML = '';
+            document.getElementById('appointmentModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('appointmentModal').style.display = 'none';
+        }
+
+        async function cancelAppointment(id) {
+            if (confirm('确定要取消这个预约吗？')) {
+                try {
+                    const response = await fetch(API_BASE + '/appointment/cancel', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ appointmentId: id })
+                    });
+                    const result = await response.json();
+                    if (result.code === 200) {
+                        loadAppointments(currentPage);
+                    } else {
+                        alert('取消失败: ' + result.msg);
+                    }
+                } catch (error) {
+                    alert('取消失败');
+                }
+            }
+        }
+
+        document.getElementById('appointmentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const appointment = {
+                activityId: parseInt(document.getElementById('activityId').value),
+                timeSlot: document.getElementById('timeSlot').value
+            };
+
+            try {
+                const response = await fetch(API_BASE + '/appointment/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(appointment)
+                });
+                
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    document.getElementById('message').innerHTML = '<div class="message success">预约成功</div>';
+                    setTimeout(() => {
+                        closeModal();
+                        loadAppointments(currentPage);
+                    }, 1000);
+                } else {
+                    document.getElementById('message').innerHTML = `<div class="message error">${result.msg}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('message').innerHTML = '<div class="message error">预约失败</div>';
+            }
+        });
+
+        function getStatusClass(status) {
+            switch(status) {
+                case '待参加':
+                    return 'status-pending';
+                case '进行中':
+                    return 'status-active';
+                case '已完成':
+                    return 'status-completed';
+                case '已取消':
+                case '已失效':
+                    return 'status-canceled';
+                default:
+                    return 'status-pending';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAppointments();
+        });
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('appointmentModal')) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

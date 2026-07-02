@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sdut.blood.mapper.BloodCollectionMapper">
+
+    <resultMap id="BaseResultMap" type="com.sdut.blood.domain.entity.BloodCollection">
+        <id column="id" property="id"/>
+        <result column="donor_id" property="donorId"/>
+        <result column="donor_id_card" property="donorIdCard"/>
+        <result column="donate_amount" property="donateAmount"/>
+        <result column="donate_type" property="donateType"/>
+        <result column="initial_screen_result" property="initialScreenResult"/>
+        <result column="collection_time" property="collectionTime"/>
+        <result column="operator_id" property="operatorId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, donor_id, donor_id_card, donate_amount, donate_type, initial_screen_result,
+        collection_time, operator_id, create_time, update_time, deleted
+    </sql>
+
+    <!-- 根据献血者ID查询历史记录 -->
+    <select id="selectByDonorId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM blood_collection
+        WHERE donor_id = #{donorId}
+        AND deleted = 0
+        ORDER BY collection_time DESC
+    </select>
+
+</mapper>

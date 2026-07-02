@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sdut.blood.mapper.BloodTestMapper">
+
+    <resultMap id="BaseResultMap" type="com.sdut.blood.domain.entity.BloodTest">
+        <id column="id" property="id"/>
+        <result column="collection_id" property="collectionId"/>
+        <result column="donor_id" property="donorId"/>
+        <result column="recheck_result" property="recheckResult"/>
+        <result column="blood_status" property="bloodStatus"/>
+        <result column="unqualified_reason" property="unqualifiedReason"/>
+        <result column="judge_time" property="judgeTime"/>
+        <result column="operator_id" property="operatorId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, collection_id, donor_id, recheck_result, blood_status, unqualified_reason,
+        judge_time, operator_id, create_time, update_time, deleted
+    </sql>
+
+    <!-- 根据采血记录ID查询 -->
+    <select id="selectByCollectionId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM blood_test
+        WHERE collection_id = #{collectionId}
+        AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 查询待判定记录 -->
+    <select id="selectPendingJudgeList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM blood_test
+        WHERE blood_status = '待检验'
+        AND deleted = 0
+        ORDER BY create_time ASC
+    </select>
+
+</mapper>

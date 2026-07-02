@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sdut.blood.mapper.DonorMapper">
+
+    <resultMap id="BaseResultMap" type="com.sdut.blood.domain.entity.Donor">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="name" property="name"/>
+        <result column="id_card" property="idCard"/>
+        <result column="blood_type" property="bloodType"/>
+        <result column="phone" property="phone"/>
+        <result column="medical_history" property="medicalHistory"/>
+        <result column="donor_status" property="donorStatus"/>
+        <result column="last_donate_date" property="lastDonateDate"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, user_id, name, id_card, blood_type, phone, medical_history, donor_status,
+        last_donate_date, create_time, update_time, deleted
+    </sql>
+
+    <!-- 根据身份证号查询 -->
+    <select id="selectByIdCard" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM donor
+        WHERE id_card = #{idCard}
+        AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 根据用户ID查询 -->
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM donor
+        WHERE user_id = #{userId}
+        AND deleted = 0
+        LIMIT 1
+    </select>
+
+</mapper>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sdut.blood.mapper.StockThresholdMapper">
+
+    <resultMap id="BaseResultMap" type="com.sdut.blood.domain.entity.StockThreshold">
+        <id column="id" property="id"/>
+        <result column="blood_type" property="bloodType"/>
+        <result column="threshold_value" property="thresholdValue"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="update_by" property="updateBy"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, blood_type, threshold_value, update_time, update_by
+    </sql>
+
+    <!-- 根据血型查询阈值 -->
+    <select id="selectByBloodType" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM stock_threshold
+        WHERE blood_type = #{bloodType}
+        LIMIT 1
+    </select>
+
+</mapper>

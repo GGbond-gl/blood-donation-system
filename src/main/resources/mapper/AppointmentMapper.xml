@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sdut.blood.mapper.AppointmentMapper">
+
+    <!-- 预约实体结果映射 -->
+    <resultMap id="BaseResultMap" type="com.sdut.blood.domain.entity.Appointment">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="activity_id" property="activityId"/>
+        <result column="time_slot" property="timeSlot"/>
+        <result column="status" property="status"/>
+        <result column="appointment_time" property="appointmentTime"/>
+        <result column="cancel_time" property="cancelTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <!-- 预约VO结果映射（关联活动信息） -->
+    <resultMap id="AppointmentVOResultMap" type="com.sdut.blood.domain.vo.AppointmentVO">
+        <id column="appointment_id" property="appointmentId"/>
+        <result column="activity_name" property="activityName"/>
+        <result column="location" property="location"/>
+        <result column="activity_date" property="activityDate"/>
+        <result column="time_slot" property="timeSlot"/>
+        <result column="status" property="status"/>
+        <result column="appointment_time" property="appointmentTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        a.id, a.user_id, a.activity_id, a.time_slot, a.status, a.appointment_time,
+        a.cancel_time, a.create_time, a.update_time, a.deleted
+    </sql>
+
+    <!-- 分页查询用户预约列表（关联活动表） -->
+    <select id="selectUserAppointmentPage" resultMap="AppointmentVOResultMap">
+        SELECT
+            a.id AS appointment_id,
+            act.activity_name,
+            act.location,
+            act.activity_date,
+            a.time_slot,
+            a.status,
+            a.appointment_time
+        FROM appointment a
+                 LEFT JOIN blood_activity act ON a.activity_id = act.id
+        WHERE a.user_id = #{userId}
+          AND a.deleted = 0
+          AND act.deleted = 0
+        ORDER BY a.appointment_time DESC
+    </select>
+
+    <!-- 统计用户是否已预约某活动 -->
+    <select id="countByUserIdAndActivityId" resultType="integer">
+        SELECT COUNT(*)
+        FROM appointment
+        WHERE user_id = #{userId}
+          AND activity_id = #{activityId}
+          AND status = '待参加'
+          AND deleted = 0
+    </select>
+
+</mapper>

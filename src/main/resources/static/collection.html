@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>采血记录 - 献血管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #e53935 0%, #d32f2f 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .nav {
+            background: #333;
+            padding: 10px;
+            text-align: center;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 20px;
+            font-size: 16px;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        .nav a:hover {
+            background: #555;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e53935;
+        }
+        .btn {
+            background: #e53935;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #d32f2f;
+        }
+        .btn-primary {
+            background: #1976d2;
+        }
+        .btn-success {
+            background: #388e3c;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        .modal-content .close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-pass {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .status-fail {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+        .pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .pagination a {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 0 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+        }
+        .pagination a.active {
+            background: #e53935;
+            color: white;
+            border-color: #e53935;
+        }
+        .message {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .message.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🩸 献血管理系统</h1>
+    </div>
+    
+    <div class="nav">
+        <a href="index.html">首页</a>
+        <a href="activity.html">活动管理</a>
+        <a href="appointment.html">预约管理</a>
+        <a href="donor.html">献血者管理</a>
+        <a href="collection.html">采血记录</a>
+        <a href="stock.html">库存管理</a>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>📝 采血记录</h2>
+            <button class="btn btn-primary" onclick="openAddModal()">+ 新增采血记录</button>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>献血者ID</th>
+                        <th>身份证号</th>
+                        <th>献血量(ml)</th>
+                        <th>献血类型</th>
+                        <th>初筛结果</th>
+                        <th>采血时间</th>
+                        <th>操作管理员ID</th>
+                    </tr>
+                </thead>
+                <tbody id="collectionTable">
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #999;">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="collectionModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>新增采血记录</h3>
+            <div id="message"></div>
+            <form id="collectionForm">
+                <div class="form-group">
+                    <label>献血者ID</label>
+                    <input type="number" id="donorId" required>
+                </div>
+                <div class="form-group">
+                    <label>献血者身份证号</label>
+                    <input type="text" id="donorIdCard" required>
+                </div>
+                <div class="form-group">
+                    <label>献血量(ml)</label>
+                    <input type="number" id="donateAmount" required min="0">
+                </div>
+                <div class="form-group">
+                    <label>献血类型</label>
+                    <select id="donateType">
+                        <option value="全血">全血</option>
+                        <option value="成分血">成分血</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>初筛结果</label>
+                    <select id="initialScreenResult">
+                        <option value="合格">合格</option>
+                        <option value="不合格">不合格</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>采血时间</label>
+                    <input type="datetime-local" id="collectionTime" required>
+                </div>
+                <div class="form-group">
+                    <label>操作管理员ID</label>
+                    <input type="number" id="operatorId" required>
+                </div>
+                <button type="submit" class="btn btn-success" style="margin-top: 20px; width: 100%;">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let currentPage = 1;
+        let totalPages = 1;
+
+        async function fetchData(url) {
+            try {
+                const response = await fetch(API_BASE + url);
+                const result = await response.json();
+                return result.data;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        async function loadCollections(page = 1) {
+            currentPage = page;
+            const data = await fetchData(`/collection/list?pageNum=${page}&pageSize=10`);
+            
+            const tbody = document.getElementById('collectionTable');
+            if (!data || data.records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #999;">暂无数据</td></tr>';
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            totalPages = data.pages;
+            tbody.innerHTML = data.records.map(record => `
+                <tr>
+                    <td>${record.id}</td>
+                    <td>${record.donorId}</td>
+                    <td>${record.donorIdCard}</td>
+                    <td>${record.donateAmount}</td>
+                    <td>${record.donateType}</td>
+                    <td><span class="status-badge ${getStatusClass(record.initialScreenResult)}">${record.initialScreenResult}</span></td>
+                    <td>${record.collectionTime || '-'}</td>
+                    <td>${record.operatorId}</td>
+                </tr>
+            `).join('');
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = `<a href="#" onclick="loadCollections(1)">首页</a>`;
+            if (currentPage > 1) {
+                html += `<a href="#" onclick="loadCollections(${currentPage - 1})">上一页</a>`;
+            }
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<a href="#" onclick="loadCollections(${i})" ${i === currentPage ? 'class="active"' : ''}>${i}</a>`;
+            }
+            if (currentPage < totalPages) {
+                html += `<a href="#" onclick="loadCollections(${currentPage + 1})">下一页</a>`;
+            }
+            html += `<a href="#" onclick="loadCollections(${totalPages})">末页</a>`;
+            pagination.innerHTML = html;
+        }
+
+        function openAddModal() {
+            const now = new Date();
+            const datetimeStr = now.toISOString().slice(0, 16);
+            
+            document.getElementById('donorId').value = '';
+            document.getElementById('donorIdCard').value = '';
+            document.getElementById('donateAmount').value = '';
+            document.getElementById('donateType').value = '全血';
+            document.getElementById('initialScreenResult').value = '合格';
+            document.getElementById('collectionTime').value = datetimeStr;
+            document.getElementById('operatorId').value = '';
+            document.getElementById('message').innerHTML = '';
+            document.getElementById('collectionModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('collectionModal').style.display = 'none';
+        }
+
+        document.getElementById('collectionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const collection = {
+                donorId: parseInt(document.getElementById('donorId').value),
+                donorIdCard: document.getElementById('donorIdCard').value,
+                donateAmount: parseInt(document.getElementById('donateAmount').value),
+                donateType: document.getElementById('donateType').value,
+                initialScreenResult: document.getElementById('initialScreenResult').value,
+                collectionTime: document.getElementById('collectionTime').value,
+                operatorId: parseInt(document.getElementById('operatorId').value)
+            };
+
+            try {
+                const response = await fetch(API_BASE + '/collection/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(collection)
+                });
+                
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    document.getElementById('message').innerHTML = '<div class="message success">保存成功</div>';
+                    setTimeout(() => {
+                        closeModal();
+                        loadCollections(currentPage);
+                    }, 1000);
+                } else {
+                    document.getElementById('message').innerHTML = `<div class="message error">${result.msg}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('message').innerHTML = '<div class="message error">保存失败</div>';
+            }
+        });
+
+        function getStatusClass(status) {
+            return status === '合格' ? 'status-pass' : 'status-fail';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCollections();
+        });
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('collectionModal')) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
