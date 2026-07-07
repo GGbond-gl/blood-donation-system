@@ -63,4 +63,9 @@ public interface BloodStockService extends IService<BloodStock> {
      * 修改库存信息
      */
     void updateStock(BloodStock bloodStock);
+
+    /**
+     * 查询待入库记录列表（检验合格但未入库的采血记录）
+     */
+    java.util.List<com.sdut.blood.domain.vo.PendingStockInVO> listPendingStockIn();
 }

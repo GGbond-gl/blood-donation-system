@@ -11,7 +11,7 @@
  Target Server Version : 80044
  File Encoding         : 65001
 
- Date: 07/07/2026 10:24:08
+ Date: 07/07/2026 15:39:56
 */
 
 SET NAMES utf8mb4;
@@ -88,7 +88,7 @@ CREATE TABLE `blood_activity`  (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2072882713903288322 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '献血招募活动表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2072882713903288327 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '献血招募活动表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of blood_activity
@@ -99,6 +99,7 @@ INSERT INTO `blood_activity` VALUES (2072882713903288322, '高校校园无偿献
 INSERT INTO `blood_activity` VALUES (2072882713903288323, '献血屋日常采血', '中心血站一楼大厅', '2026-07-13', 50, 50, 50, 50, '未开始', '2026-07-06 20:42:38', '2026-07-06 20:42:38', 0);
 INSERT INTO `blood_activity` VALUES (2072882713903288324, '高校校园无偿献血活动', '山东理工大学大学生艺术广场', '2026-07-16', 50, 50, 50, 50, '未开始', '2026-07-06 21:50:20', '2026-07-06 21:50:20', 0);
 INSERT INTO `blood_activity` VALUES (2072882713903288325, '7-7活动测试', '山东理工大学大学生艺术广场', '2026-07-05', 10, 10, 10, 10, '未开始', '2026-07-07 10:18:43', '2026-07-07 10:18:43', 0);
+INSERT INTO `blood_activity` VALUES (2072882713903288326, '7-7活动测试2', '山东理工大学大学生艺术广场', '2026-07-05', 10, 10, 10, 10, '未开始', '2026-07-07 13:28:14', '2026-07-07 13:28:14', 0);
 
 -- ----------------------------
 -- Table structure for blood_collection
@@ -154,6 +155,8 @@ CREATE TABLE `blood_stock`  (
 -- ----------------------------
 -- Records of blood_stock
 -- ----------------------------
+INSERT INTO `blood_stock` VALUES (1, 2073617161636544513, 'B型', 400, '2026-08-11', '正常', NULL, '2026-07-07 15:02:43', '2026-07-07 15:02:43', 0);
+INSERT INTO `blood_stock` VALUES (2, 2073638933392011265, 'O型', 200, '2026-08-11', '正常', NULL, '2026-07-07 15:02:43', '2026-07-07 15:02:43', 0);
 
 -- ----------------------------
 -- Table structure for blood_test
@@ -185,8 +188,8 @@ CREATE TABLE `blood_test`  (
 -- Records of blood_test
 -- ----------------------------
 INSERT INTO `blood_test` VALUES (2073413193094508545, 2073413193044176897, 2, NULL, '待检验', NULL, NULL, NULL, NULL, '2026-07-04 22:26:42', '2026-07-04 22:26:42', 0);
-INSERT INTO `blood_test` VALUES (2073617161674293249, 2073617161636544513, 2, NULL, '待检验', NULL, NULL, NULL, NULL, '2026-07-05 11:57:11', '2026-07-05 11:57:11', 0);
-INSERT INTO `blood_test` VALUES (2073638933475897345, 2073638933392011265, 6, NULL, '待检验', NULL, NULL, NULL, NULL, '2026-07-05 13:23:42', '2026-07-05 13:23:42', 0);
+INSERT INTO `blood_test` VALUES (2073617161674293249, 2073617161636544513, 2, '合格', '已入库', NULL, '', '2026-07-07 15:02:24', 2, '2026-07-05 11:57:11', '2026-07-05 11:57:11', 0);
+INSERT INTO `blood_test` VALUES (2073638933475897345, 2073638933392011265, 6, '合格', '已入库', NULL, '', '2026-07-07 15:02:14', 2, '2026-07-05 13:23:42', '2026-07-05 13:23:42', 0);
 INSERT INTO `blood_test` VALUES (2074098888557244417, 2074098888536272898, 7, '不合格', '不合格', '其他', '', '2026-07-06 21:01:34', 2, '2026-07-06 19:51:24', '2026-07-06 19:51:24', 0);
 
 -- ----------------------------

@@ -2019,11 +2019,24 @@ body.legacy-page {
         <div id="stock-in" class="tab-content" style="display:none;">
             <div class="card">
                 <h2>血液入库</h2>
-                <form id="stock-form">
-                    <div class="form-group"><label>采血记录ID</label><input type="number" id="stock-collection-id" required></div>
-                    <div class="form-group"><label>有效期</label><input type="date" id="stock-expire-date" required></div>
-                    <button type="button" class="btn" onclick="saveStockIn()">入库</button>
-                </form>
+                <p style="color:var(--apple-muted); font-size:14px; margin-bottom:15px;">检验合格的采血记录将自动显示在此列表中，请选择需要入库的记录并填写有效期</p>
+                <table id="pending-stock-table">
+                    <thead><tr>
+                        <th><input type="checkbox" id="select-all-pending" onclick="toggleSelectAllPending()"></th>
+                        <th>献血者姓名</th>
+                        <th>血型</th>
+                        <th>血量(ml)</th>
+                        <th>献血类型</th>
+                        <th>采血时间</th>
+                        <th>检验时间</th>
+                        <th>有效期</th>
+                    </tr></thead>
+                    <tbody id="pending-stock-table-body"></tbody>
+                </table>
+                <div style="margin-top:20px; display:flex; gap:15px; align-items:center;">
+                    <button class="btn btn-primary" onclick="saveStockIn()">确认入库</button>
+                    <button class="btn btn-warning" onclick="loadPendingStockList()">刷新列表</button>
+                </div>
             </div>
         </div>
 
@@ -2172,6 +2185,7 @@ body.legacy-page {
             if (tabId === 'collection-add') resetCollectionForm();
             if (tabId === 'test-list') { await Promise.all([loadDonorsMap(), loadCollectionsMap()]); loadTestList(); }
             if (tabId === 'stock-list') { await Promise.all([loadDonorsMap(), loadCollectionsMap()]); loadStockList(); }
+            if (tabId === 'stock-in') loadPendingStockList();
             if (tabId === 'home') loadStats();
             if (tabId === 'report') loadReport();
         }
@@ -2792,17 +2806,81 @@ body.legacy-page {
         }
 
         async function saveStockIn() {
-            const data = {
-                collectionId: document.getElementById('stock-collection-id').value,
-                expireDate: document.getElementById('stock-expire-date').value
-            };
-            const result = await fetchData('/stock/in', { method: 'POST', body: JSON.stringify(data) });
-            if (result && result.code === 200) {
-                alert('入库成功');
-                showTab('stock-list');
-            } else {
-                alert(result?.msg || '入库失败');
+            const checkedBoxes = document.querySelectorAll('#pending-stock-table-body input[type="checkbox"]:checked');
+            if (checkedBoxes.length === 0) {
+                alert('请至少选择一条待入库记录');
+                return;
             }
+
+            let successCount = 0;
+            let failCount = 0;
+
+            for (const checkbox of checkedBoxes) {
+                const collectionId = checkbox.value;
+                const expireDate = document.getElementById('expire-date-' + collectionId).value;
+                
+                if (!expireDate) {
+                    alert('请为所有选中的记录填写有效期');
+                    return;
+                }
+
+                const data = { collectionId, expireDate };
+                const result = await fetchData('/stock/in', { method: 'POST', body: JSON.stringify(data) });
+                if (result && result.code === 200) {
+                    successCount++;
+                } else {
+                    failCount++;
+                }
+            }
+
+            if (successCount > 0) {
+                alert(`成功入库 ${successCount} 条记录${failCount > 0 ? '，失败 ' + failCount + ' 条' : ''}`);
+                loadPendingStockList();
+            } else {
+                alert('入库失败');
+            }
+        }
+
+        async function loadPendingStockList() {
+            const result = await fetchData('/stock/pending');
+            const tbody = document.getElementById('pending-stock-table-body');
+            if (!result?.data?.length) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">暂无待入库记录</td></tr>';
+                return;
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            tbody.innerHTML = result.data.map(item => {
+                const defaultExpireDate = calculateDefaultExpireDate(item.donateType);
+                return `
+                <tr>
+                    <td><input type="checkbox" value="${item.collectionId}"></td>
+                    <td>${item.donorName}</td>
+                    <td>${item.bloodType}</td>
+                    <td>${item.donateAmount}</td>
+                    <td>${item.donateType}</td>
+                    <td>${item.collectionTime?.split(' ')[0] || '-'}</td>
+                    <td>${item.judgeTime?.split(' ')[0] || '-'}</td>
+                    <td><input type="date" id="expire-date-${item.collectionId}" min="${today}" value="${defaultExpireDate}" style="width:120px;"></td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        function calculateDefaultExpireDate(donateType) {
+            const date = new Date();
+            if (donateType === '成分血') {
+                date.setDate(date.getDate() + 5);
+            } else {
+                date.setDate(date.getDate() + 35);
+            }
+            return date.toISOString().split('T')[0];
+        }
+
+        function toggleSelectAllPending() {
+            const selectAll = document.getElementById('select-all-pending');
+            const checkboxes = document.querySelectorAll('#pending-stock-table-body input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
         }
 
         function closeModal() {

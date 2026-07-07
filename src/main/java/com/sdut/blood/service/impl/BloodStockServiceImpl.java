@@ -307,4 +307,9 @@ public class BloodStockServiceImpl extends ServiceImpl<BloodStockMapper, BloodSt
         }
         updateById(stock);
     }
+
+    @Override
+    public List<com.sdut.blood.domain.vo.PendingStockInVO> listPendingStockIn() {
+        return baseMapper.selectPendingStockInList();
+    }
 }

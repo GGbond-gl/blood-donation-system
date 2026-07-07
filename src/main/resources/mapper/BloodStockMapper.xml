@@ -59,10 +59,36 @@
         SELECT DATE(update_time) as date, blood_type, SUM(blood_amount) as out_amount
         FROM blood_stock
         WHERE status = '已出库'
-          AND update_time &gt;= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+          AND update_time >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
           AND deleted = 0
         GROUP BY DATE(update_time), blood_type
         ORDER BY date DESC
+    </select>
+
+    <!-- 查询待入库记录列表（检验合格但未入库的采血记录） -->
+    <select id="selectPendingStockInList" resultType="com.sdut.blood.domain.vo.PendingStockInVO">
+        SELECT 
+            bc.id AS collectionId,
+            bt.id AS testId,
+            bt.donor_id AS donorId,
+            d.name AS donorName,
+            d.blood_type AS bloodType,
+            d.phone AS phone,
+            bc.donate_amount AS donateAmount,
+            bc.donate_type AS donateType,
+            bt.recheck_result AS recheckResult,
+            bc.collection_time AS collectionTime,
+            bt.judge_time AS judgeTime
+        FROM blood_test bt
+        INNER JOIN blood_collection bc ON bt.collection_id = bc.id
+        INNER JOIN donor d ON bt.donor_id = d.id
+        LEFT JOIN blood_stock bs ON bt.collection_id = bs.collection_id AND bs.deleted = 0
+        WHERE bt.blood_status = '合格'
+          AND bs.id IS NULL
+          AND bt.deleted = 0
+          AND bc.deleted = 0
+          AND d.deleted = 0
+        ORDER BY bt.judge_time DESC
     </select>
 
 </mapper>

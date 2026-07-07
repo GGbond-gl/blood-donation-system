@@ -4,6 +4,7 @@ import com.sdut.blood.common.result.Result;
 import com.sdut.blood.domain.dto.StockInDTO;
 import com.sdut.blood.domain.entity.BloodStock;
 import com.sdut.blood.domain.vo.BloodStockVO;
+import com.sdut.blood.domain.vo.PendingStockInVO;
 import com.sdut.blood.domain.vo.StockTrendVO;
 import com.sdut.blood.domain.vo.StockWarningVO;
 import com.sdut.blood.service.BloodStockService;
@@ -23,6 +24,15 @@ public class BloodStockController {
 
     @Resource
     private BloodStockService bloodStockService;
+
+    /**
+     * 查询待入库记录列表（检验合格但未入库的采血记录）
+     */
+    @GetMapping("/pending")
+    public Result<List<PendingStockInVO>> listPendingStockIn() {
+        List<PendingStockInVO> list = bloodStockService.listPendingStockIn();
+        return Result.success(list);
+    }
 
     /**
      * 登记血液入库（UC32）
