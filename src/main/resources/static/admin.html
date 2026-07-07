@@ -1698,8 +1698,8 @@ body.legacy-page {
         <div class="menu-group">
             <a href="#collection" onclick="toggleMenu(this)">采血检验管理</a>
             <div class="sub-menu">
-                <a href="#collection-list" onclick="showTab('collection-list')">采血记录</a>
                 <a href="#collection-add" onclick="showTab('collection-add')">新增采血</a>
+                <a href="#collection-list" onclick="showTab('collection-list')">采血记录</a>
                 <a href="#test-list" onclick="showTab('test-list')">检验记录</a>
             </div>
         </div>
@@ -2020,6 +2020,7 @@ body.legacy-page {
                 <table id="collection-table">
                     <thead><tr>
                         <th>献血者姓名</th>
+                        <th>身份证</th>
                         <th>血型</th>
                         <th class="sortable" data-sort="donateAmount" onclick="toggleSort('collection-table', 'donateAmount'); loadCollectionList()">献血量(ml)</th>
                         <th class="sortable" data-sort="donateType" onclick="toggleSort('collection-table', 'donateType'); loadCollectionList()">献血类型</th>
@@ -2922,14 +2923,21 @@ body.legacy-page {
                         <select id="test-recheck-result">
                             <option value="">请选择</option>
                             <option value="合格" ${t.recheckResult === '合格' ? 'selected' : ''}>合格</option>
-                            <option value="不合格" ${t.recheckResult === '不合格' ? 'selected' : ''}>不合格</option>
+                            <option value="谷丙转氨酶（ALT）超标" ${t.recheckResult === '谷丙转氨酶（ALT）超标' ? 'selected' : ''}>谷丙转氨酶（ALT）超标</option>
+                            <option value="血液传染病指标异常" ${t.recheckResult === '血液传染病指标异常' ? 'selected' : ''}>血液传染病指标异常</option>
+                            <option value="白细胞常规指标不合格" ${t.recheckResult === '白细胞常规指标不合格' ? 'selected' : ''}>白细胞常规指标不合格</option>
+                            <option value="血红蛋白常规指标不合格" ${t.recheckResult === '血红蛋白常规指标不合格' ? 'selected' : ''}>血红蛋白常规指标不合格</option>
+                            <option value="血小板计数不合格" ${t.recheckResult === '血小板计数不合格' ? 'selected' : ''}>血小板计数不合格</option>
+                            <option value="其他" ${t.recheckResult === '其他' ? 'selected' : ''}>其他</option>
                         </select>
                     </div>
                     <div class="form-group"><label>血液状态</label>
                         <select id="test-blood-status">
-                            <option value="待检验" ${t.bloodStatus === '待检验' ? 'selected' : ''}>待检验</option>
                             <option value="合格" ${t.bloodStatus === '合格' ? 'selected' : ''}>合格</option>
                             <option value="不合格" ${t.bloodStatus === '不合格' ? 'selected' : ''}>不合格</option>
+                            <option value="已入库" ${t.bloodStatus === '已入库' ? 'selected' : ''}>已入库</option>
+                            <option value="已出库" ${t.bloodStatus === '已出库' ? 'selected' : ''}>已出库</option>
+                            <option value="已过期" ${t.bloodStatus === '已过期' ? 'selected' : ''}>已过期</option>
                         </select>
                     </div>
                     <div class="form-group"><label>不合格原因</label><input type="text" id="test-reason" value="${t.unqualifiedReason || ''}"></div>
