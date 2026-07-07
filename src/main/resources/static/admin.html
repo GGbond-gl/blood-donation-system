@@ -1,0 +1,2843 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <link rel="icon" href="data:,">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>献血管理系统 - 管理员</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #e53935 0%, #d32f2f 100%); color: white; padding: 18px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header h1 { font-size: 22px; }
+        .header .user-info { font-size: 14px; }
+        .header .user-info span { margin-right: 20px; }
+        .header .btn-logout { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 16px; border-radius: 4px; cursor: pointer; }
+        .sidebar { width: 200px; background: #2c3e50; min-height: calc(100vh - 60px); position: fixed; top: 60px; left: 0; padding-top: 20px; }
+        .sidebar a { display: block; color: #ecf0f1; padding: 12px 20px; text-decoration: none; transition: background 0.3s; font-size: 14px; }
+        .sidebar a:hover { background: #34495e; }
+        .sidebar a.active { background: #e53935; }
+        .sidebar .sub-menu { background: #1a252f; padding-left: 30px; }
+        .main-content { margin-left: 200px; padding: 25px; }
+        .card { background: white; border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+        .card h2 { color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #e53935; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+        .stat-card:nth-child(2) { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stat-card:nth-child(3) { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .stat-card:nth-child(4) { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .stat-value { font-size: 32px; font-weight: bold; }
+        .stat-label { font-size: 13px; opacity: 0.9; margin-top: 5px; }
+        .btn { background: #e53935; color: white; border: none; padding: 8px 18px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .btn:hover { background: #d32f2f; }
+        .btn-primary { background: #1976d2; }
+        .btn-primary:hover { background: #1565c0; }
+        .btn-success { background: #388e3c; }
+        .btn-warning { background: #ff9800; }
+        .btn-danger { background: #d32f2f; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        table th, table td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+        table th { background: #f8f9fa; font-weight: 600; }
+        table th.sortable { cursor: pointer; user-select: none; }
+        table th.sortable:hover { background: #e9ecef; }
+        table th.sortable::after {
+            content: ' ↕';
+            font-size: 12px;
+            color: #999;
+            margin-left: 4px;
+            opacity: 0.5;
+        }
+        table th.sortable.sort-asc::after {
+            content: ' ↑';
+            color: #e53935;
+            opacity: 1;
+        }
+        table th.sortable.sort-desc::after {
+            content: ' ↓';
+            color: #e53935;
+            opacity: 1;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; position: relative; }
+        .modal-content .close { position: absolute; top: 15px; right: 15px; font-size: 24px; cursor: pointer; }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 15px; }
+        .search-bar input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .status-badge { padding: 3px 10px; border-radius: 12px; font-size: 12px; }
+        .status-pending { background: #fff3e0; color: #e65100; }
+        .status-active { background: #e3f2fd; color: #1565c0; }
+        .status-completed { background: #e8f5e9; color: #2e7d32; }
+        .status-canceled { background: #fce4ec; color: #c2185b; }
+        .pagination { text-align: center; margin-top: 20px; }
+        .pagination a { display: inline-block; padding: 6px 12px; margin: 0 3px; border: 1px solid #ddd; border-radius: 4px; text-decoration: none; color: #333; }
+        .pagination a.active { background: #e53935; color: white; }
+        .message { padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px; }
+        .message.success { background: #e8f5e9; color: #2e7d32; }
+        .message.error { background: #fce4ec; color: #c2185b; }
+    </style>
+    <style id="apple-style-inline">
+/*
+ * AppleStyle frontend refresh.
+ * Shared visual layer for the static pages only.
+ */
+:root {
+    --apple-bg: #f7f8fb;
+    --apple-bg-soft: #ffffff;
+    --apple-surface: rgba(255, 255, 255, 0.88);
+    --apple-surface-strong: #ffffff;
+    --apple-ink: #111111;
+    --apple-ink-soft: #1d1d1f;
+    --apple-muted: #6e6e73;
+    --apple-muted-2: #86868b;
+    --apple-border: rgba(0, 0, 0, 0.08);
+    --apple-border-strong: rgba(0, 0, 0, 0.14);
+    --apple-fill: #f2f2f4;
+    --apple-fill-strong: #e8e8ed;
+    --apple-black: #0b0b0d;
+    --apple-coral: #ff3b5f;
+    --apple-coral-deep: #d91f43;
+    --apple-coral-soft: #fff1f4;
+    --apple-aqua: #16b8cf;
+    --apple-aqua-deep: #08798b;
+    --apple-aqua-soft: #e8fbff;
+    --apple-gold: #ffb340;
+    --apple-gold-soft: #fff7e6;
+    --apple-lilac: #7c6cff;
+    --apple-lilac-soft: #f3f1ff;
+    --apple-red: var(--apple-coral-deep);
+    --apple-red-soft: var(--apple-coral-soft);
+    --apple-green: #1f9d55;
+    --apple-green-soft: #edfff5;
+    --apple-blue: #1677ff;
+    --apple-blue-soft: #eff6ff;
+    --apple-orange: #a15c07;
+    --apple-orange-soft: #fff7ed;
+    --apple-radius-xs: 10px;
+    --apple-radius-sm: 14px;
+    --apple-radius-md: 20px;
+    --apple-radius-lg: 28px;
+    --apple-radius-xl: 34px;
+    --apple-shadow-sm: 0 12px 34px rgba(0, 0, 0, 0.06);
+    --apple-shadow-md: 0 24px 70px rgba(0, 0, 0, 0.10);
+    --apple-shadow-lg: 0 32px 90px rgba(0, 0, 0, 0.15);
+    --ai-header-height: 72px;
+}
+
+* {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+}
+
+body {
+    color: var(--apple-ink-soft);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", Arial, sans-serif !important;
+}
+
+body.login-page,
+body.app-shell,
+body.legacy-page {
+    background:
+        radial-gradient(circle at 9% 2%, rgba(255, 59, 95, 0.13) 0, transparent 24%),
+        radial-gradient(circle at 84% 8%, rgba(22, 184, 207, 0.16) 0, transparent 28%),
+        radial-gradient(circle at 56% 106%, rgba(255, 179, 64, 0.13) 0, transparent 30%),
+        linear-gradient(135deg, #ffffff 0%, #f9fafc 44%, #eef3f8 100%) !important;
+}
+
+a {
+    color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: inherit !important;
+}
+
+::selection {
+    background: rgba(0, 0, 0, 0.12);
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.18);
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: content-box;
+}
+
+.btn,
+button.btn,
+.btn-logout,
+.tab,
+.pagination a,
+.chat-suggestions button,
+.ai-history-new,
+.ai-context-clear,
+.chat-send {
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease, opacity 0.18s ease !important;
+}
+
+.btn:hover,
+button.btn:hover,
+.btn-logout:hover,
+.pagination a:hover,
+.chat-suggestions button:hover,
+.ai-history-new:hover,
+.ai-context-clear:hover,
+.chat-send:hover {
+    transform: translateY(-1px);
+}
+
+.btn:active,
+button.btn:active,
+.btn-logout:active,
+.pagination a:active,
+.chat-send:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.btn,
+button.btn {
+    min-height: 40px;
+    border: 1px solid var(--apple-black) !important;
+    border-radius: 999px !important;
+    background: linear-gradient(135deg, #111114 0%, #2a2a31 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+    font-weight: 650 !important;
+    letter-spacing: -0.01em;
+}
+
+.btn-primary,
+.btn-success {
+    background: linear-gradient(135deg, var(--apple-coral) 0%, var(--apple-coral-deep) 100%) !important;
+    border-color: rgba(255, 79, 109, 0.42) !important;
+    box-shadow: 0 14px 30px rgba(255, 79, 109, 0.20);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(233, 251, 255, 0.86)) !important;
+    border-color: rgba(24, 200, 216, 0.28) !important;
+    color: var(--apple-aqua-deep) !important;
+    box-shadow: 0 12px 26px rgba(24, 200, 216, 0.11);
+}
+
+.btn-danger {
+    background: var(--apple-red) !important;
+    border-color: var(--apple-red) !important;
+    color: #ffffff !important;
+}
+
+.message,
+[id$="message"],
+#message {
+    border-radius: var(--apple-radius-sm) !important;
+}
+
+.message.success,
+#message.success {
+    background: var(--apple-green-soft) !important;
+    color: var(--apple-green) !important;
+    border: 1px solid rgba(24, 121, 78, 0.16);
+}
+
+.message.error,
+#message.error {
+    background: var(--apple-red-soft) !important;
+    color: var(--apple-red) !important;
+    border: 1px solid rgba(180, 35, 45, 0.16);
+}
+
+body.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+}
+
+.login-page .container {
+    width: min(980px, 100%) !important;
+    max-width: 980px !important;
+    padding: 0 !important;
+}
+
+.login-page .login-box {
+    display: grid;
+    grid-template-columns: minmax(0, 1.06fr) minmax(380px, 0.94fr);
+    min-height: 620px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 36px !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+    box-shadow: var(--apple-shadow-lg) !important;
+    backdrop-filter: blur(28px) saturate(150%);
+}
+
+.login-page .logo-section {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 620px;
+    padding: 54px !important;
+    overflow: hidden;
+    color: #ffffff !important;
+    text-align: left !important;
+    background:
+        radial-gradient(circle at 18% 24%, rgba(255, 79, 109, 0.34) 0, transparent 30%),
+        radial-gradient(circle at 82% 18%, rgba(24, 200, 216, 0.22) 0, transparent 30%),
+        linear-gradient(145deg, #151418 0%, #25252b 56%, #3a3942 100%) !important;
+}
+
+.login-page .logo-section::before {
+    content: "";
+    position: absolute;
+    width: 360px;
+    height: 360px;
+    right: -120px;
+    top: -98px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.18) 0, transparent 66%);
+}
+
+.login-page .logo-section::after {
+    content: "招募 · 预约 · 采血 · 检验 · 库存";
+    position: relative;
+    z-index: 1;
+    width: fit-content;
+    margin-top: 36px;
+    padding: 10px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(16px);
+}
+
+.login-page .logo-section h1,
+.login-page .logo-section p {
+    position: relative;
+    z-index: 1;
+}
+
+.login-page .logo-section h1 {
+    max-width: none;
+    margin: 0 !important;
+    color: #ffffff !important;
+    font-size: clamp(36px, 4.2vw, 50px) !important;
+    line-height: 1.02;
+    letter-spacing: -0.06em;
+    white-space: nowrap;
+}
+
+.login-page .logo-section p {
+    margin-top: 16px;
+    color: rgba(255, 255, 255, 0.68) !important;
+    font-size: 16px !important;
+    letter-spacing: 0.01em;
+}
+
+.login-page .form-section {
+    align-self: center;
+    padding: 48px !important;
+}
+
+.login-page .tabs {
+    gap: 8px;
+    margin-bottom: 28px !important;
+    padding: 4px;
+    border: 1px solid var(--apple-border) !important;
+    border-radius: 999px;
+    background: var(--apple-fill);
+}
+
+.login-page .tab {
+    border: 0 !important;
+    border-radius: 999px;
+    color: var(--apple-muted) !important;
+    font-size: 15px !important;
+}
+
+.login-page .tab.active {
+    color: var(--apple-ink) !important;
+    background: #ffffff;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.form-group label,
+.info-row label {
+    color: var(--apple-muted) !important;
+    font-size: 13px !important;
+    font-weight: 650 !important;
+    letter-spacing: -0.01em;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea,
+.search-bar input,
+.search-bar select,
+.chat-input textarea {
+    min-height: 42px;
+    border: 1px solid var(--apple-border) !important;
+    border-radius: 14px !important;
+    background: rgba(255, 255, 255, 0.82) !important;
+    color: var(--apple-ink) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+.search-bar input:focus,
+.search-bar select:focus,
+.chat-input textarea:focus {
+    outline: none !important;
+    border-color: rgba(0, 0, 0, 0.34) !important;
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.06) !important;
+}
+
+.login-page .btn {
+    min-height: 50px;
+    font-size: 16px !important;
+}
+
+.login-page .forgot-link a,
+.login-page .role-tip strong {
+    color: var(--apple-ink) !important;
+}
+
+.login-page .role-tip {
+    border: 1px solid var(--apple-border);
+    border-radius: 18px !important;
+    background: rgba(245, 245, 247, 0.82) !important;
+    color: var(--apple-muted) !important;
+}
+
+.login-page .redirect-overlay {
+    background: rgba(8, 8, 9, 0.76) !important;
+    backdrop-filter: blur(18px);
+}
+
+.login-page .redirect-card {
+    border-radius: 28px !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    border-color: rgba(255, 255, 255, 0.26) !important;
+}
+
+body.app-shell {
+    min-height: 100vh;
+}
+
+.app-shell .header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: grid !important;
+    grid-template-columns: minmax(260px, 0.7fr) minmax(320px, 1.1fr) auto;
+    gap: 24px;
+    align-items: center;
+    min-height: 72px;
+    padding: 14px 28px 14px 32px !important;
+    color: var(--apple-ink) !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    box-shadow: none !important;
+    backdrop-filter: blur(24px) saturate(160%);
+}
+
+.app-shell .header h1 {
+    color: var(--apple-ink) !important;
+    font-size: 20px !important;
+    font-weight: 750 !important;
+    letter-spacing: -0.04em;
+    white-space: nowrap;
+}
+
+.global-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: min(100%, 620px);
+    justify-self: center;
+}
+
+.global-search span {
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    z-index: 1;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    min-width: 30px;
+    height: 24px;
+    border: 1px solid var(--apple-border);
+    border-radius: 8px;
+    color: var(--apple-muted-2);
+    background: rgba(245, 245, 247, 0.82);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.global-search input {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 54px 0 42px;
+    border: 1px solid var(--apple-border);
+    border-radius: 13px;
+    color: var(--apple-ink);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(250, 251, 253, 0.88));
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.045), inset 0 1px 0 rgba(255, 255, 255, 0.88);
+}
+
+.global-search::before {
+    content: "⌕";
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    z-index: 1;
+    transform: translateY(-50%);
+    color: var(--apple-muted-2);
+    font-size: 18px;
+}
+
+.app-shell .header .user-info {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    color: var(--apple-muted) !important;
+}
+
+.app-shell .header .user-info span {
+    margin-right: 0 !important;
+    padding: 8px 12px;
+    border: 1px solid var(--apple-border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.62);
+}
+
+.app-shell .btn-logout {
+    border: 1px solid var(--apple-border) !important;
+    border-radius: 999px !important;
+    background: #ffffff !important;
+    color: var(--apple-ink) !important;
+    font-weight: 650;
+}
+
+.app-shell .sidebar {
+    width: 252px !important;
+    min-height: auto !important;
+    position: fixed;
+    top: 94px !important;
+    bottom: 22px;
+    left: 22px;
+    z-index: 40;
+    padding: 18px !important;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.78);
+    border-radius: 30px;
+    background:
+        radial-gradient(circle at 16% 4%, rgba(255, 59, 95, 0.10), transparent 30%),
+        radial-gradient(circle at 92% 18%, rgba(22, 184, 207, 0.10), transparent 28%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 253, 0.86) 100%) !important;
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.09);
+    backdrop-filter: blur(28px) saturate(160%);
+}
+
+.app-shell .sidebar::before {
+    content: "Workspace";
+    display: block;
+    margin: 4px 8px 12px;
+    color: var(--apple-muted-2);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.app-shell .sidebar a {
+    margin: 4px 0;
+    padding: 12px 14px !important;
+    border-radius: 18px;
+    color: var(--apple-muted) !important;
+    font-size: 14px !important;
+    font-weight: 680;
+    letter-spacing: -0.01em;
+    background: transparent !important;
+}
+
+.app-shell .sidebar a:hover {
+    color: var(--apple-ink) !important;
+    background: rgba(0, 0, 0, 0.055) !important;
+}
+
+.app-shell .sidebar a.active {
+    color: var(--apple-ink) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(245, 247, 251, 0.92)) !important;
+    box-shadow: inset 4px 0 0 var(--apple-coral), 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.app-shell .sidebar .sub-menu {
+    margin: 4px 0 10px 12px;
+    padding-left: 12px !important;
+    border-left: 1px solid var(--apple-border);
+    background: transparent !important;
+    overflow: hidden;
+    max-height: 200px;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.app-shell .sidebar .sub-menu.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    border-left: none;
+}
+
+.app-shell .sidebar .sub-menu a {
+    font-size: 13px !important;
+    color: var(--apple-muted-2) !important;
+}
+
+.app-shell .sidebar .menu-group > a::after {
+    content: "▾";
+    float: right;
+    font-size: 12px;
+    transition: transform 0.3s ease;
+    color: var(--apple-muted-2);
+}
+
+.app-shell .sidebar .menu-group > a.collapsed::after {
+    transform: rotate(-90deg);
+}
+
+.app-shell .main-content {
+    margin-left: 304px !important;
+    padding: 26px 36px 54px !important;
+}
+
+.app-shell .tab-content {
+    animation: appleFadeUp 0.28s ease both;
+}
+
+@keyframes appleFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card,
+.modal-content {
+    border: 1px solid rgba(255, 255, 255, 0.82) !important;
+    border-radius: var(--apple-radius-lg) !important;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 250, 252, 0.82)) !important;
+    box-shadow: var(--apple-shadow-sm) !important;
+    backdrop-filter: blur(24px) saturate(145%);
+}
+
+.app-shell .card,
+.legacy-page .card {
+    padding: 28px !important;
+    margin-bottom: 22px !important;
+    overflow-x: auto;
+}
+
+.card h2,
+.card h3,
+.modal-content h3 {
+    color: var(--apple-ink) !important;
+    border-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    font-weight: 760 !important;
+    letter-spacing: -0.04em;
+}
+
+.card h2 {
+    margin-bottom: 18px !important;
+    font-size: clamp(22px, 2vw, 30px) !important;
+}
+
+.section-header,
+.card > .section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.section-header h2 {
+    margin-bottom: 6px !important;
+}
+
+.section-header p,
+.dashboard-subtitle,
+.insight-card p,
+.workflow-list span,
+.priority-list span,
+.overview-panel span,
+.stat-card small,
+.stock-health-meta {
+    color: var(--apple-muted);
+    line-height: 1.7;
+}
+
+.overview-panel {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 28px;
+    padding: 22px 28px !important;
+}
+
+.overview-panel h2 {
+    margin: 0 0 10px !important;
+    font-size: clamp(32px, 3.5vw, 46px) !important;
+    line-height: 1;
+    letter-spacing: -0.06em;
+}
+
+.overview-panel p {
+    margin: 0 0 4px;
+    color: var(--apple-ink);
+    font-size: 16px;
+    font-weight: 760;
+    letter-spacing: -0.03em;
+}
+
+.overview-panel span {
+    display: block;
+    max-width: 680px;
+    font-size: 14px;
+}
+
+.dashboard-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(320px, 0.92fr) minmax(480px, 1.08fr);
+    gap: 30px;
+    align-items: stretch;
+    overflow: hidden;
+    padding: 38px !important;
+    min-height: 360px;
+}
+
+.dashboard-hero::after {
+    content: "";
+    position: absolute;
+    right: -126px;
+    top: -132px;
+    width: 390px;
+    height: 390px;
+    border-radius: 50%;
+    border: 1px solid rgba(24, 200, 216, 0.12);
+    background: radial-gradient(circle, rgba(24, 200, 216, 0.16) 0, transparent 68%);
+    pointer-events: none;
+}
+
+.dashboard-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 0% 100%, rgba(255, 79, 109, 0.13), transparent 36%),
+        radial-gradient(circle at 82% 20%, rgba(24, 200, 216, 0.16), transparent 36%),
+        radial-gradient(circle at 68% 90%, rgba(244, 178, 79, 0.12), transparent 30%),
+        linear-gradient(120deg, rgba(255, 255, 255, 0.74), transparent 46%);
+    pointer-events: none;
+}
+
+.dashboard-copy {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    min-height: 284px;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.dashboard-copy h2 {
+    max-width: 580px;
+    margin-bottom: 12px !important;
+    font-size: clamp(40px, 5.4vw, 72px) !important;
+    line-height: 0.98;
+    letter-spacing: -0.075em;
+}
+
+.dashboard-subtitle {
+    max-width: 560px;
+    margin: 0;
+    font-size: 15.5px;
+}
+
+.dashboard-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 0;
+    justify-content: flex-end;
+}
+
+.dashboard-actions .btn {
+    width: auto !important;
+    padding-inline: 18px !important;
+}
+
+.dashboard-actions .btn:first-child,
+.donor-welcome .quick-actions .btn:first-child,
+.overview-panel .dashboard-actions .btn:first-child {
+    background: linear-gradient(135deg, var(--apple-coral) 0%, #ff7a59 100%) !important;
+    border-color: rgba(255, 79, 109, 0.36) !important;
+    box-shadow: 0 16px 32px rgba(255, 79, 109, 0.22);
+}
+
+.dashboard-hero .stats-grid {
+    position: relative;
+    z-index: 1;
+    align-self: stretch;
+}
+
+.stats-grid {
+    gap: 14px !important;
+}
+
+.dashboard-kpi-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    margin: 16px 0 18px;
+}
+
+.stat-card {
+    position: relative;
+    min-height: 118px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 15px 18px !important;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.075) !important;
+    border-radius: 26px !important;
+    color: var(--apple-ink) !important;
+    text-align: left !important;
+    background:
+        radial-gradient(circle at 88% 16%, rgba(255, 59, 95, 0.08), transparent 28%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 252, 0.78)) !important;
+    box-shadow: 0 18px 46px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.88) !important;
+}
+
+.stat-card::after {
+    content: "";
+    position: absolute;
+    inset: auto -42px -52px auto;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    opacity: 0.34;
+    filter: blur(8px);
+    background: radial-gradient(circle, var(--apple-coral), transparent 64%);
+    pointer-events: none;
+}
+
+.stat-card::before {
+    content: "";
+    position: absolute;
+    right: 16px;
+    top: 16px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--apple-coral);
+    opacity: 0.34;
+}
+
+.stat-card:nth-child(2)::before { background: var(--apple-aqua); }
+.stat-card:nth-child(3)::before { background: var(--apple-gold); }
+.stat-card:nth-child(4)::before { background: var(--apple-lilac); }
+.stat-card:nth-child(2)::after { background: radial-gradient(circle, var(--apple-aqua), transparent 64%); }
+.stat-card:nth-child(3)::after { background: radial-gradient(circle, var(--apple-gold), transparent 64%); }
+.stat-card:nth-child(4)::after { background: radial-gradient(circle, var(--apple-lilac), transparent 64%); }
+
+.stat-icon {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--apple-border);
+    border-radius: 11px;
+    color: var(--apple-coral-deep);
+    background: rgba(255, 255, 255, 0.78);
+    font-size: 17px;
+    font-weight: 760;
+}
+
+.stat-value {
+    color: var(--apple-ink) !important;
+    font-size: clamp(30px, 3.2vw, 40px) !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.06em;
+}
+
+.stat-label {
+    color: var(--apple-muted) !important;
+    opacity: 1 !important;
+    font-size: 13px !important;
+    font-weight: 650;
+}
+
+.stat-card small {
+    position: relative;
+    z-index: 1;
+    font-size: 12px;
+}
+
+.stat-card small b {
+    color: var(--apple-coral-deep);
+}
+
+.compact-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.insight-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.72fr);
+    gap: 22px;
+}
+
+.operations-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(286px, 0.34fr);
+    gap: 22px;
+    margin-bottom: 18px;
+}
+
+.insight-card {
+    padding: 22px;
+    border: 1px solid var(--apple-border);
+    border-radius: var(--apple-radius-lg);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(22, 184, 207, 0.07), transparent 32%),
+        rgba(255, 255, 255, 0.78);
+    box-shadow: 0 18px 52px rgba(15, 23, 42, 0.07);
+    backdrop-filter: blur(18px);
+}
+
+.insight-card h3 {
+    margin: 0 0 14px;
+    color: var(--apple-ink);
+    font-size: 20px;
+    letter-spacing: -0.04em;
+}
+
+.stock-health-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.stock-health-item {
+    padding: 16px;
+    border: 1px solid var(--apple-border);
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 249, 252, 0.72));
+}
+
+.stock-health-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.stock-health-top strong {
+    color: var(--apple-ink);
+    font-size: 18px;
+    letter-spacing: -0.04em;
+}
+
+.stock-health-top span {
+    padding: 4px 9px;
+    border-radius: 999px;
+    color: var(--apple-green);
+    background: var(--apple-green-soft);
+    font-size: 12px;
+    font-weight: 760;
+}
+
+.stock-health-amount {
+    margin-top: 16px;
+    color: var(--apple-ink);
+    font-size: clamp(22px, 2.6vw, 30px);
+    font-weight: 800;
+    letter-spacing: -0.06em;
+}
+
+.stock-health-meta {
+    margin-top: 2px;
+    font-size: 12px;
+}
+
+.health-bar {
+    height: 8px;
+    margin-top: 16px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.health-bar i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--apple-green), #63d471);
+}
+
+.stock-health-item.is-low .stock-health-top span {
+    color: var(--apple-orange);
+    background: var(--apple-orange-soft);
+}
+
+.stock-health-item.is-low .health-bar i {
+    background: linear-gradient(90deg, var(--apple-gold), #ffd166);
+}
+
+.stock-health-item.is-risk .stock-health-top span {
+    color: var(--apple-coral-deep);
+    background: var(--apple-coral-soft);
+}
+
+.stock-health-item.is-risk .health-bar i {
+    background: linear-gradient(90deg, var(--apple-coral), #ff7a59);
+}
+
+.health-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 18px;
+    color: var(--apple-muted);
+    font-size: 12px;
+}
+
+.health-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.health-legend i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.signal-red { background: var(--apple-coral); }
+.signal-gold { background: var(--apple-gold); }
+.signal-green { background: var(--apple-green); }
+
+.todo-list {
+    display: grid;
+    gap: 10px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.todo-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 48px;
+    padding: 12px 14px;
+    border: 1px solid var(--apple-border);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.todo-list span {
+    color: var(--apple-ink-soft);
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.todo-list strong {
+    color: var(--apple-coral-deep);
+    font-size: 18px;
+    letter-spacing: -0.04em;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    padding: 28px;
+    border: 1px dashed var(--apple-border-strong);
+    border-radius: 18px;
+    color: var(--apple-muted);
+    text-align: center;
+    background: rgba(255, 255, 255, 0.62);
+}
+
+.workflow-list,
+.priority-list {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.workflow-list li,
+.priority-list li {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 14px;
+    border: 1px solid var(--apple-border);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.64);
+}
+
+.workflow-list strong,
+.priority-list strong {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--apple-ink);
+    font-size: 14px;
+}
+
+.workflow-step {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--apple-coral), #ff7a59);
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.priority-dot {
+    width: 10px;
+    height: 10px;
+    margin: 8px auto 0;
+    border-radius: 50%;
+    background: var(--apple-aqua);
+    box-shadow: 0 0 0 8px rgba(24, 200, 216, 0.11);
+}
+
+.search-bar {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px !important;
+    padding: 10px;
+    border: 1px solid var(--apple-border);
+    border-radius: 20px;
+    background: rgba(245, 245, 247, 0.72);
+}
+
+.search-bar .btn,
+.card > .btn {
+    width: auto !important;
+    padding-inline: 16px !important;
+}
+
+table {
+    width: 100%;
+    min-width: 760px;
+    overflow: hidden;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border: 1px solid var(--apple-border);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.62);
+}
+
+table th,
+table td {
+    border-bottom: 1px solid var(--apple-border) !important;
+    padding: 14px 15px !important;
+    color: var(--apple-ink-soft);
+    font-size: 13px !important;
+    vertical-align: middle;
+}
+
+table th {
+    color: var(--apple-muted) !important;
+    background: rgba(245, 245, 247, 0.92) !important;
+    font-weight: 750 !important;
+    letter-spacing: -0.01em;
+}
+
+table tbody tr {
+    transition: background 0.18s ease;
+}
+
+table tbody tr:hover {
+    background: rgba(0, 0, 0, 0.025);
+}
+
+table tr:last-child td {
+    border-bottom: 0 !important;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 4px 10px !important;
+    border: 1px solid var(--apple-border);
+    border-radius: 999px !important;
+    background: var(--apple-fill) !important;
+    color: var(--apple-ink) !important;
+    font-size: 12px !important;
+    font-weight: 700;
+}
+
+.status-active,
+.status-normal,
+.status-qualified,
+.status-completed {
+    background: var(--apple-aqua-soft) !important;
+    color: var(--apple-aqua-deep) !important;
+    border-color: rgba(24, 200, 216, 0.18);
+}
+
+.status-pending,
+.status-near,
+.status-unqualified {
+    background: var(--apple-orange-soft) !important;
+    color: var(--apple-orange) !important;
+    border-color: rgba(244, 178, 79, 0.26);
+}
+
+.status-canceled,
+.status-expired,
+.status-danger {
+    background: var(--apple-red-soft) !important;
+    color: var(--apple-red) !important;
+    border-color: rgba(180, 35, 45, 0.16);
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 22px !important;
+}
+
+.pagination a {
+    border: 1px solid var(--apple-border) !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.75);
+    color: var(--apple-ink) !important;
+}
+
+.pagination a.active {
+    background: var(--apple-black) !important;
+    border-color: var(--apple-black) !important;
+    color: #ffffff !important;
+}
+
+.app-shell .card > form,
+.legacy-page .modal-content form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 18px;
+}
+
+.app-shell .card > form input[type="hidden"],
+.legacy-page .modal-content form input[type="hidden"] {
+    display: none;
+}
+
+.app-shell .card > form .form-group,
+.legacy-page .modal-content form .form-group {
+    margin-bottom: 0 !important;
+}
+
+.app-shell .card > form .form-group:has(textarea),
+.app-shell .card > form .form-group:has(input[type="text"][id*="address"]),
+.legacy-page .modal-content form .form-group:has(textarea) {
+    grid-column: 1 / -1;
+}
+
+.app-shell .card > form .btn,
+.legacy-page .modal-content form .btn {
+    width: fit-content !important;
+    min-width: 120px;
+    margin-top: 6px !important;
+}
+
+.info-row {
+    display: grid !important;
+    grid-template-columns: 120px 1fr;
+    gap: 12px;
+    align-items: center;
+    margin: 0 !important;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--apple-border);
+}
+
+.info-row span {
+    color: var(--apple-ink);
+    font-weight: 620;
+}
+
+.modal {
+    background: rgba(0, 0, 0, 0.36) !important;
+    backdrop-filter: blur(12px);
+}
+
+.modal-content {
+    width: min(560px, calc(100% - 32px)) !important;
+    max-height: min(820px, calc(100vh - 48px));
+    overflow: auto;
+}
+
+.modal-content .close {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    color: var(--apple-muted);
+    background: var(--apple-fill);
+    font-size: 22px !important;
+}
+
+.donor-welcome .dashboard-copy {
+    min-height: 236px;
+}
+
+.donor-welcome .quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.table-card {
+    overflow-x: auto;
+}
+
+.ai-card {
+    padding: 18px !important;
+}
+
+.ai-chat-active,
+.ai-chat-active body {
+    height: 100%;
+    overflow: hidden !important;
+}
+
+.donor-page.ai-chat-active {
+    height: 100vh;
+}
+
+.donor-page.ai-chat-active .header {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 90;
+}
+
+.donor-page.ai-chat-active .main-content {
+    height: calc(100vh - var(--ai-header-height));
+    margin-top: var(--ai-header-height) !important;
+    padding: 14px 28px 18px !important;
+    overflow: hidden;
+}
+
+.donor-page.ai-chat-active #ai-chat {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.donor-page.ai-chat-active #ai-card {
+    height: 100%;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+.donor-page.ai-chat-active .ai-workspace {
+    height: 100%;
+    min-height: 0 !important;
+}
+
+.donor-page.ai-chat-active .ai-history-sidebar {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+}
+
+.donor-page.ai-chat-active .ai-history-list {
+    flex: 1;
+    max-height: none !important;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.donor-page.ai-chat-active .ai-chat-shell {
+    height: 100%;
+    min-height: 0 !important;
+    overflow: hidden;
+}
+
+.donor-page.ai-chat-active .chat-box {
+    flex: 1 1 auto;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto;
+}
+
+.donor-page.ai-chat-active .chat-footer,
+.donor-page.ai-chat-active .ai-chat-header {
+    flex: 0 0 auto;
+}
+
+.app-shell .ai-workspace {
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+.app-shell .ai-history-sidebar,
+.app-shell .ai-chat-shell {
+    border-color: var(--apple-border) !important;
+}
+
+.app-shell .chat-bubble {
+    border-radius: 18px !important;
+}
+
+body.legacy-page {
+    min-height: 100vh;
+}
+
+.legacy-page .header {
+    padding: 34px 24px 18px !important;
+    color: var(--apple-ink) !important;
+    text-align: center;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.legacy-page .header h1 {
+    color: var(--apple-ink) !important;
+    font-size: clamp(32px, 5vw, 52px) !important;
+    font-weight: 780 !important;
+    letter-spacing: -0.07em;
+}
+
+.legacy-page .nav {
+    position: sticky;
+    top: 16px;
+    z-index: 30;
+    display: flex !important;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: fit-content;
+    max-width: calc(100% - 28px);
+    margin: 0 auto 24px !important;
+    padding: 7px !important;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72) !important;
+    box-shadow: var(--apple-shadow-sm);
+    backdrop-filter: blur(22px) saturate(150%);
+}
+
+.legacy-page .nav a {
+    padding: 9px 14px !important;
+    border-radius: 999px;
+    color: var(--apple-muted) !important;
+    font-weight: 650;
+}
+
+.legacy-page .nav a:hover {
+    color: var(--apple-ink) !important;
+    background: rgba(0, 0, 0, 0.06) !important;
+}
+
+.legacy-page .nav a.active {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, var(--apple-coral), var(--apple-aqua)) !important;
+    box-shadow: 0 12px 28px rgba(24, 200, 216, 0.18), 0 10px 24px rgba(255, 79, 109, 0.14);
+}
+
+.legacy-page .container {
+    width: min(1180px, calc(100% - 36px)) !important;
+    max-width: 1180px !important;
+    margin: 0 auto !important;
+    padding: 0 0 54px !important;
+}
+
+.legacy-page .stats-grid {
+    margin: 20px 0 !important;
+}
+
+.legacy-page .card > h2:first-child {
+    font-size: clamp(28px, 4vw, 46px) !important;
+}
+
+@media (max-width: 1120px) {
+    .dashboard-hero,
+    .insight-grid,
+    .operations-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .compact-stats,
+    .dashboard-kpi-row,
+    .stock-health-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 860px) {
+    body.login-page {
+        padding: 16px;
+    }
+
+    .login-page .login-box {
+        grid-template-columns: 1fr;
+        min-height: auto;
+        border-radius: 28px !important;
+    }
+
+    .login-page .logo-section {
+        min-height: 260px;
+        padding: 34px !important;
+    }
+
+    .login-page .logo-section h1 {
+        white-space: normal;
+    }
+
+    .login-page .form-section {
+        padding: 30px !important;
+    }
+
+    .app-shell .header {
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .global-search {
+        width: 100%;
+        justify-self: stretch;
+    }
+
+    .app-shell .sidebar {
+        position: static;
+        width: auto !important;
+        margin: 18px;
+        max-height: none;
+        border-radius: 24px;
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+    }
+
+    .app-shell .sidebar::before {
+        display: none;
+    }
+
+    .app-shell .sidebar > div,
+    .app-shell .sidebar .sub-menu {
+        display: contents;
+    }
+
+    .app-shell .sidebar a {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        margin: 0 !important;
+        padding: 10px 14px !important;
+    }
+
+    .app-shell .main-content {
+        margin-left: 0 !important;
+        padding: 0 18px 36px !important;
+    }
+
+    .app-shell .card,
+    .legacy-page .card {
+        padding: 20px !important;
+        border-radius: 24px !important;
+    }
+
+    .dashboard-hero {
+        padding: 24px !important;
+    }
+
+    .overview-panel {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 24px !important;
+    }
+
+    .overview-panel .dashboard-actions {
+        justify-content: flex-start;
+    }
+
+    .dashboard-copy h2 {
+        font-size: 42px !important;
+    }
+
+    .app-shell .card > form,
+    .legacy-page .modal-content form {
+        grid-template-columns: 1fr;
+    }
+
+    .compact-stats,
+    .dashboard-kpi-row,
+    .stock-health-grid,
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .legacy-page .nav {
+        border-radius: 26px;
+    }
+
+    .donor-page.ai-chat-active .sidebar {
+        display: none !important;
+    }
+
+    .donor-page.ai-chat-active .main-content {
+        height: calc(100vh - var(--ai-header-height));
+        margin-top: var(--ai-header-height) !important;
+        padding: 10px 12px 12px !important;
+    }
+
+    .donor-page.ai-chat-active #ai-card {
+        border-radius: 24px !important;
+    }
+
+    .donor-page.ai-chat-active .ai-workspace,
+    .donor-page.ai-chat-active #ai-card.history-collapsed .ai-workspace {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .donor-page.ai-chat-active .ai-history-sidebar {
+        display: none !important;
+    }
+
+    .donor-page.ai-chat-active .ai-chat-header {
+        gap: 10px;
+        padding: 14px;
+    }
+
+    .donor-page.ai-chat-active .chat-box {
+        padding: 18px 14px;
+    }
+
+    .donor-page.ai-chat-active .chat-footer {
+        padding: 12px 14px;
+    }
+}
+
+</style>
+</head>
+<body class="app-shell admin-page">
+    <div class="header">
+        <h1>🩸 献血管理系统 - 管理后台</h1>
+        <div class="global-search">
+            <span>⌘</span>
+            <input type="search" placeholder="搜索献血者、活动、采血批号或库存">
+        </div>
+        <div class="user-info">
+            <span id="user-name">管理员</span>
+            <button class="btn-logout" onclick="logout()">退出登录</button>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <a href="admin.html" class="active">首页概览</a>
+        <div class="menu-group">
+            <a href="#donor" onclick="toggleMenu(this)">献血者档案管理</a>
+            <div class="sub-menu">
+                <a href="#donor-list" onclick="showTab('donor-list')">档案列表</a>
+                <a href="#donor-add" onclick="showTab('donor-add')">新增档案</a>
+            </div>
+        </div>
+        <div class="menu-group">
+            <a href="#activity" onclick="toggleMenu(this)">招募活动管理</a>
+            <div class="sub-menu">
+                <a href="#activity-list" onclick="showTab('activity-list')">活动列表</a>
+                <a href="#activity-add" onclick="showTab('activity-add')">新增活动</a>
+            </div>
+        </div>
+        <div class="menu-group">
+            <a href="#collection" onclick="toggleMenu(this)">采血检验管理</a>
+            <div class="sub-menu">
+                <a href="#collection-list" onclick="showTab('collection-list')">采血记录</a>
+                <a href="#collection-add" onclick="showTab('collection-add')">新增采血</a>
+                <a href="#test-list" onclick="showTab('test-list')">检验记录</a>
+            </div>
+        </div>
+        <div class="menu-group">
+            <a href="#stock" onclick="toggleMenu(this)">血液库存管理</a>
+            <div class="sub-menu">
+                <a href="#stock-list" onclick="showTab('stock-list')">库存明细</a>
+                <a href="#stock-in" onclick="showTab('stock-in')">血液入库</a>
+            </div>
+        </div>
+        <a href="#report" onclick="showTab('report')">报表统计管理</a>
+    </div>
+
+    <div class="main-content">
+        <div id="home" class="tab-content">
+            <section class="overview-panel card">
+                <div>
+                    <h2>献血管理系统</h2>
+                    <p>您好，管理员，欢迎回来！</p>
+                    <span>以下是今日系统运行概览，重点关注预约、检验和库存健康。</span>
+                </div>
+                <div class="dashboard-actions">
+                    <button class="btn" onclick="showTab('donor-add')">新增献血者</button>
+                    <button class="btn btn-warning" onclick="showTab('activity-add')">创建活动</button>
+                    <button class="btn btn-warning" onclick="showTab('stock-list')">查看库存</button>
+                </div>
+            </section>
+
+            <section class="stats-grid dashboard-kpi-row">
+                <div class="stat-card">
+                    <span class="stat-icon">▣</span>
+                    <div class="stat-value" id="activityCount">0</div>
+                    <div class="stat-label">活动总数</div>
+                    <small>当前可预约 <b id="availableActivityCount">0</b></small>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">◎</span>
+                    <div class="stat-value" id="donorCount">0</div>
+                    <div class="stat-label">献血者总数</div>
+                    <small>档案持续沉淀</small>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">◌</span>
+                    <div class="stat-value" id="collectionCount">0</div>
+                    <div class="stat-label">采血总数(ml)</div>
+                    <small>采集与检验联动</small>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">◇</span>
+                    <div class="stat-value" id="stockCount">0</div>
+                    <div class="stat-label">库存总量(ml)</div>
+                    <small>临期库存 <b id="nearExpireStockCount">0</b></small>
+                </div>
+            </section>
+
+            <section class="operations-grid">
+                <div class="insight-card stock-health-card">
+                    <div class="section-header">
+                        <div>
+                            <h3>血库库存健康度</h3>
+                            <p>按血型查看库存规模与临期风险，优先处理红色和橙色信号。</p>
+                        </div>
+                        <button class="btn btn-warning" onclick="showTab('stock-list')">库存详情</button>
+                    </div>
+                    <div class="stock-health-grid" id="stock-health-body"></div>
+                    <div class="health-legend">
+                        <span><i class="signal-red"></i> 紧张 / 临期</span>
+                        <span><i class="signal-gold"></i> 偏低</span>
+                        <span><i class="signal-green"></i> 充足</span>
+                    </div>
+                </div>
+                <aside class="insight-card todo-card">
+                    <div class="section-header">
+                        <div>
+                            <h3>今日待办</h3>
+                            <p>把高优先级工作放在最前面。</p>
+                        </div>
+                    </div>
+                    <ul class="todo-list">
+                        <li><span>活动预约待参加</span><strong id="pendingAppointmentCount">0</strong></li>
+                        <li><span>检验结果待复核</span><strong id="pendingTestCount">0</strong></li>
+                        <li><span>临期库存待处理</span><strong id="todoNearExpireCount">0</strong></li>
+                        <li><span>可预约活动</span><strong id="todoAvailableActivityCount">0</strong></li>
+                    </ul>
+                </aside>
+            </section>
+
+            <section class="insight-grid">
+                <div class="insight-card">
+                    <h3>核心业务流</h3>
+                    <ul class="workflow-list">
+                        <li>
+                            <span class="workflow-step">01</span>
+                            <div><strong>活动招募</strong><span>创建献血活动并维护地点、日期与时段名额。</span></div>
+                        </li>
+                        <li>
+                            <span class="workflow-step">02</span>
+                            <div><strong>档案沉淀</strong><span>统一维护献血者身份、血型、联系方式与健康状态。</span></div>
+                        </li>
+                        <li>
+                            <span class="workflow-step">03</span>
+                            <div><strong>采血检验</strong><span>将采血记录、初筛与复检结果串联，减少信息断点。</span></div>
+                        </li>
+                        <li>
+                            <span class="workflow-step">04</span>
+                            <div><strong>库存流转</strong><span>追踪血液入库、有效期、临期提醒与出库操作。</span></div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="insight-card">
+                    <h3>管理优先级</h3>
+                    <ul class="priority-list">
+                        <li>
+                            <span class="priority-dot"></span>
+                            <div><strong>先处理待检验血液</strong><span>复检完成后再进入库存，保证库存数据可追溯。</span></div>
+                        </li>
+                        <li>
+                            <span class="priority-dot"></span>
+                            <div><strong>关注临期库存</strong><span>优先查看库存明细，及时安排使用或出库。</span></div>
+                        </li>
+                        <li>
+                            <span class="priority-dot"></span>
+                            <div><strong>活动名额动态调整</strong><span>根据预约情况维护上午、下午名额，提升现场效率。</span></div>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <div id="donor-list" class="tab-content" style="display:none;">
+            <div class="card">
+                <h2>献血者档案列表</h2>
+                <div class="search-bar">
+                    <input type="text" id="donor-search" placeholder="搜索姓名..." onkeyup="loadDonorList()">
+                    <select id="blood-type-filter" onchange="loadDonorList()">
+                        <option value="">全部血型</option>
+                        <option value="A型">A型</option>
+                        <option value="B型">B型</option>
+                        <option value="O型">O型</option>
+                        <option value="AB型">AB型</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="showTab('donor-add')">新增档案</button>
+                </div>
+                <table id="donor-table">
+                    <thead><tr>
+                        <th class="sortable" data-sort="name" onclick="toggleSort('donor-table', 'name'); loadDonorList()">姓名</th>
+                        <th>身份证</th>
+                        <th class="sortable" data-sort="bloodType" onclick="toggleSort('donor-table', 'bloodType'); loadDonorList()">血型</th>
+                        <th>电话</th>
+                        <th class="sortable" data-sort="donorStatus" onclick="toggleSort('donor-table', 'donorStatus'); loadDonorList()">状态</th>
+                        <th>操作</th>
+                    </tr></thead>
+                    <tbody id="donor-table-body"></tbody>
+                </table>
+                <div class="pagination" id="donor-pagination"></div>
+            </div>
+        </div>
+
+        <div id="donor-add" class="tab-content" style="display:none;">
+            <div class="card">
+                <h2>新增献血者档案</h2>
+                <form id="donor-form">
+                    <input type="hidden" id="donor-id">
+                    <div class="form-group"><label>用户ID（可选）</label><input type="number" id="donor-user-id" placeholder="不填则不关联用户"></div>
+                    <div class="form-group"><label>姓名</label><input type="text" id="donor-name" required></div>
+                    <div class="form-group"><label>身份证号</label><input type="text" id="donor-id-card" maxlength="18" placeholder="新增必填，编辑留空表示不修改"></div>
+                    <div class="form-group">
+                        <label>血型</label>
+                        <select id="donor-blood-type">
+                            <option value="A型">A型</option>
+                            <option value="B型">B型</option>
+                            <option value="O型">O型</option>
+                            <option value="AB型">AB型</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>联系电话</label><input type="text" id="donor-phone" required></div>
+                    <div class="form-group"><label>性别</label>
+                        <select id="donor-gender">
+                            <option value="">请选择</option>
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>地址</label><input type="text" id="donor-address"></div>
+                    <div class="form-group"><label>病史</label><textarea id="donor-medical-history" rows="3"></textarea></div>
+                    <button type="button" class="btn" onclick="saveDonor()">保存</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="activity-list" class="tab-content" style="display:none;">
+            <div class="card">
+                <h2>献血活动列表</h2>
+                <button class="btn btn-primary" onclick="showTab('activity-add')">新增活动</button>
+                <table id="activity-table">
+                    <thead><tr>
+                        <th class="sortable" data-sort="activityName" onclick="toggleSort('activity-table', 'activityName'); loadActivityList()">活动名称</th>
+                        <th>地点</th>
+                        <th class="sortable" data-sort="activityDate" onclick="toggleSort('activity-table', 'activityDate'); loadActivityList()">日期</th>
+                        <th class="sortable" data-sort="status" onclick="toggleSort('activity-table', 'status'); loadActivityList()">状态</th>
+                        <th class="sortable" data-sort="morningQuota" onclick="toggleSort('activity-table', 'morningQuota'); loadActivityList()">上午名额</th>
+                        <th class="sortable" data-sort="afternoonQuota" onclick="toggleSort('activity-table', 'afternoonQuota'); loadActivityList()">下午名额</th>
+                        <th>操作</th>
+                    </tr></thead>
+                    <tbody id="activity-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="activity-add" class="tab-content" style="display:none;">
+            <div class="card">
+                <h2>新增献血活动</h2>
+                <form id="activity-form">
+                    <input type="hidden" id="activity-id">
+                    <div class="form-group"><label>活动名称</label><input type="text" id="activity-name" required></div>
+                    <div class="form-group"><label>活动地点</label><input type="text" id="activity-location" required></div>
+                    <div class="form-group"><label>活动日期</label><input type="date" id="activity-date" required></div>
+                    <div class="form-group"><label>上午名额</label><input type="number" id="activity-morning-quota" value="50"></div>
+                    <div class="form-group"><label>下午名额</label><input type="number" id="activity-afternoon-quota" value="50"></div>
+                    <button type="button" class="btn" onclick="saveActivity()">保存</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="collection-list" class="tab-content" style="display:none;">
+            <div class="card">
+                <h2>采血记录列表</h2>
+                <button class="btn btn-primary" onclick="showTab('collection-add')">新增采血记录</button>
+                <table id="collection-table">
+                    <thead><tr>
+                        <th>献血者姓名</th>
+                        <th>血型</th>
+                        <th class="sortable" data-sort="donateAmount" onclick="toggleSort('collection-table', 'donateAmount'); loadCollectionList()">献血量(ml)</th>
+                        <th class="sortable" data-sort="donateType" onclick="toggleSort('collection-table', 'donateType'); loadCollectionList()">献血类型</th>
+                        <th class="sortable" data-sort="initialScreenResult" onclick="toggleSort('collection-table', 'initialScreenResult'); loadCollectionList()">初筛结果</th>
+                        <th class="sortable" data-sort="collectionTime" onclick="toggleSort('collection-table', 'collectionTime'); loadCollectionList()">采血时间</th>
+                        <th>操作</th>
+                    </tr></thead>
+                    <tbody id="collection-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="collection-add" class="tab-content" style="display:none;">
+            <div class="card">
+                <h2 id="collection-title">新增采血记录</h2>
+                <div id="collection-message"></div>
+                <form id="collection-form">
+                    <input type="hidden" id="collection-id">
+                    <input type="hidden" id="selected-donor-id">
+                    <div class="form-group">
+                        <label>搜索献血者</label>
+                        <input type="text" id="donor-search-input" placeholder="输入姓名搜索" onkeyup="searchDonors()">
+                    </div>
+                    <div id="donor-search-results" style="max-height:200px;overflow-y:auto;border:1px solid #ddd;border-radius:4px;margin-bottom:15px;display:none;">
+                    </div>
+                    <div id="selected-donor-info" style="display:none;margin-bottom:15px;padding:10px;background:#f5f5f5;border-radius:4px;">
+                        <strong>已选择：</strong><span id="selected-donor-name"></span>
+                        <span id="selected-donor-blood-type"></span>
+                        <span id="selected-donor-id-card"></span>
+                    </div>
+                    <div class="form-group"><label>献血量(ml)</label><input type="number" id="collection-amount" required min="0"></div>
+                    <div class="form-group"><label>献血类型</label>
+                        <select id="collection-type">
+                            <option value="全血">全血</option>
+                            <option value="成分血">成分血</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>初筛结果</label>
+                        <select id="collection-result">
+                            <option value="合格">合格</option>
+                            <option value="不合格">不合格</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn" onclick="saveCollection()">保存</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="test-list" class="tab-content" style="display:none;">
+            <div class="card">
+                <h2>检验记录列表</h2>
+                <table id="test-table">
+                    <thead><tr>
+                        <th>献血者姓名</th>
+                        <th>血型</th>
+                        <th>献血量(ml)</th>
+                        <th class="sortable" data-sort="recheckResult" onclick="toggleSort('test-table', 'recheckResult'); loadTestList()">复检结果</th>
+                        <th class="sortable" data-sort="bloodStatus" onclick="toggleSort('test-table', 'bloodStatus'); loadTestList()">血液状态</th>
+                        <th>不合格原因</th>
+                        <th class="sortable" data-sort="judgeTime" onclick="toggleSort('test-table', 'judgeTime'); loadTestList()">判定时间</th>
+                        <th>操作</th>
+                    </tr></thead>
+                    <tbody id="test-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="stock-list" class="tab-content" style="display:none;">
+            <div class="card">
+                <h2>库存明细</h2>
+                <table id="stock-table">
+                    <thead><tr>
+                        <th>献血者姓名</th>
+                        <th class="sortable" data-sort="bloodType" onclick="toggleSort('stock-table', 'bloodType'); loadStockList()">血型</th>
+                        <th class="sortable" data-sort="bloodAmount" onclick="toggleSort('stock-table', 'bloodAmount'); loadStockList()">血量(ml)</th>
+                        <th class="sortable" data-sort="expireDate" onclick="toggleSort('stock-table', 'expireDate'); loadStockList()">有效期</th>
+                        <th class="sortable" data-sort="status" onclick="toggleSort('stock-table', 'status'); loadStockList()">状态</th>
+                        <th class="sortable" data-sort="createTime" onclick="toggleSort('stock-table', 'createTime'); loadStockList()">入库时间</th>
+                        <th>操作</th>
+                    </tr></thead>
+                    <tbody id="stock-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="stock-in" class="tab-content" style="display:none;">
+            <div class="card">
+                <h2>血液入库</h2>
+                <form id="stock-form">
+                    <div class="form-group"><label>采血记录ID</label><input type="number" id="stock-collection-id" required></div>
+                    <div class="form-group"><label>有效期</label><input type="date" id="stock-expire-date" required></div>
+                    <button type="button" class="btn" onclick="saveStockIn()">入库</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="report" class="tab-content" style="display:none;">
+            <div class="card">
+                <h2>报表统计</h2>
+                <button class="btn btn-primary" onclick="exportReport()">导出Excel报表</button>
+                <div class="stats-grid" style="margin-top:20px;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="report-donor-count">0</div>
+                        <div class="stat-label">年度献血人数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="report-total-amount">0</div>
+                        <div class="stat-label">年度献血总量(ml)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="report-qualified-rate">0%</div>
+                        <div class="stat-label">血液合格率</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="edit-modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 id="modal-title">编辑</h3>
+            <div id="modal-message"></div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let donorsMap = {};
+        let collectionsMap = {};
+
+        function getToken() { return localStorage.getItem('token'); }
+        function getHeaders() {
+            const token = getToken();
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+            return headers;
+        }
+
+        async function fetchData(url, options = {}) {
+            try {
+                const response = await fetch(API_BASE + url, { headers: getHeaders(), ...options });
+                if (response.status === 401) {
+                    alert('登录已过期，请重新登录');
+                    localStorage.clear();
+                    window.location.href = 'index.html';
+                    return null;
+                }
+                return await response.json();
+            } catch (e) { console.error(e); return null; }
+        }
+
+        async function loadDonorsMap() {
+            const donors = await fetchData('/donor/list?pageNum=1&pageSize=1000');
+            donorsMap = {};
+            if (donors?.data?.records) {
+                donors.data.records.forEach(d => { donorsMap[d.id] = d; });
+            }
+        }
+
+        async function loadCollectionsMap() {
+            const collections = await fetchData('/collection/list?pageNum=1&pageSize=1000');
+            collectionsMap = {};
+            if (collections?.data?.records) {
+                collections.data.records.forEach(c => { collectionsMap[c.id] = c; });
+            }
+        }
+
+        function toggleMenu(link) {
+            const menuGroup = link.parentElement;
+            const subMenu = menuGroup.querySelector('.sub-menu');
+            if (subMenu) {
+                subMenu.classList.toggle('collapsed');
+                link.classList.toggle('collapsed');
+            }
+        }
+
+        const sortStates = {};
+
+        function toggleSort(tableId, fieldName) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+
+            if (!sortStates[tableId]) {
+                sortStates[tableId] = { field: '', order: '' };
+            }
+
+            const currentState = sortStates[tableId];
+            
+            if (currentState.field === fieldName) {
+                if (currentState.order === 'asc') {
+                    currentState.order = 'desc';
+                } else if (currentState.order === 'desc') {
+                    currentState.field = '';
+                    currentState.order = '';
+                } else {
+                    currentState.order = 'asc';
+                }
+            } else {
+                currentState.field = fieldName;
+                currentState.order = 'asc';
+            }
+
+            const ths = table.querySelectorAll('thead th');
+            ths.forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+
+            if (currentState.field) {
+                const sortTh = table.querySelector(`th[data-sort="${fieldName}"]`);
+                if (sortTh) {
+                    sortTh.classList.add(currentState.order === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            }
+
+            return { field: currentState.field, order: currentState.order };
+        }
+
+        function getSortParam(tableId) {
+            if (!sortStates[tableId]) {
+                sortStates[tableId] = { field: '', order: '' };
+            }
+            return sortStates[tableId];
+        }
+
+        async function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+            document.getElementById(tabId).style.display = 'block';
+            document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+            const activeLink = tabId === 'home'
+                ? document.querySelector('.sidebar a[href="admin.html"]')
+                : document.querySelector(`.sidebar a[href="#${tabId}"]`);
+            if (activeLink) activeLink.classList.add('active');
+            
+            if (tabId === 'donor-list' || tabId === 'donor-add') loadDonorList();
+            if (tabId === 'activity-list' || tabId === 'activity-add') loadActivityList();
+            if (tabId === 'collection-list') { await loadDonorsMap(); loadCollectionList(); }
+            if (tabId === 'collection-add') resetCollectionForm();
+            if (tabId === 'test-list') { await Promise.all([loadDonorsMap(), loadCollectionsMap()]); loadTestList(); }
+            if (tabId === 'stock-list') { await Promise.all([loadDonorsMap(), loadCollectionsMap()]); loadStockList(); }
+            if (tabId === 'home') loadStats();
+            if (tabId === 'report') loadReport();
+        }
+
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+
+        async function loadStats() {
+            const dashboard = await fetchData('/dashboard/admin');
+            if (dashboard?.data) {
+                renderAdminDashboard(dashboard.data);
+                return;
+            }
+
+            const activities = await fetchData('/activity/all');
+            const donors = await fetchData('/donor/list?pageNum=1&pageSize=1000');
+            const collections = await fetchData('/collection/list?pageNum=1&pageSize=1000');
+            const stocks = await fetchData('/stock/list');
+            const totalAmount = collections?.data?.records?.reduce((sum, c) => sum + (c.donateAmount || 0), 0) || 0;
+            const stockAmount = stocks?.data?.reduce((sum, s) => sum + (s.bloodAmount || 0), 0) || 0;
+            renderAdminDashboard({
+                activityCount: activities?.data?.length || 0,
+                donorCount: donors?.data?.total || 0,
+                collectionTotalAmount: totalAmount,
+                stockTotalAmount: stockAmount,
+                availableActivityCount: activities?.data?.length || 0,
+                pendingAppointmentCount: 0,
+                pendingTestCount: 0,
+                nearExpireStockCount: 0,
+                stockByBloodType: []
+            });
+        }
+
+        function renderAdminDashboard(data) {
+            setText('activityCount', formatNumber(data.activityCount));
+            setText('donorCount', formatNumber(data.donorCount));
+            setText('collectionCount', formatNumber(data.collectionTotalAmount));
+            setText('stockCount', formatNumber(data.stockTotalAmount));
+            setText('availableActivityCount', formatNumber(data.availableActivityCount));
+            setText('nearExpireStockCount', formatNumber(data.nearExpireStockCount));
+            setText('todoNearExpireCount', formatNumber(data.nearExpireStockCount));
+            setText('pendingAppointmentCount', formatNumber(data.pendingAppointmentCount));
+            setText('pendingTestCount', formatNumber(data.pendingTestCount));
+            setText('todoAvailableActivityCount', formatNumber(data.availableActivityCount));
+            renderStockHealth(data.stockByBloodType || []);
+        }
+
+        function renderStockHealth(items) {
+            const body = document.getElementById('stock-health-body');
+            if (!body) return;
+            if (!items.length) {
+                body.innerHTML = '<div class="empty-state">暂无库存数据</div>';
+                return;
+            }
+            const maxAmount = Math.max(...items.map(item => item.totalAmount || 0), 1);
+            body.innerHTML = items.map(item => {
+                const amount = item.totalAmount || 0;
+                const percent = Math.max(8, Math.round(amount / maxAmount * 100));
+                const status = getStockSignal(amount, item.nearExpireCount || 0);
+                return `
+                    <div class="stock-health-item ${status.className}">
+                        <div class="stock-health-top">
+                            <strong>${item.bloodType}</strong>
+                            <span>${status.label}</span>
+                        </div>
+                        <div class="stock-health-amount">${formatNumber(amount)} ml</div>
+                        <div class="stock-health-meta">临期 ${item.nearExpireCount || 0} · 批次 ${item.count || 0}</div>
+                        <div class="health-bar"><i style="width:${percent}%"></i></div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getStockSignal(amount, nearExpireCount) {
+            if (nearExpireCount > 0 || amount < 400) return { label: '紧张', className: 'is-risk' };
+            if (amount < 900) return { label: '偏低', className: 'is-low' };
+            return { label: '充足', className: 'is-good' };
+        }
+
+        function setText(id, value) {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        }
+
+        function formatNumber(value) {
+            return Number(value || 0).toLocaleString('zh-CN');
+        }
+
+        async function loadDonorList() {
+            const bloodType = document.getElementById('blood-type-filter').value;
+            const name = document.getElementById('donor-search').value.trim();
+            const sort = getSortParam('donor-table');
+            let url = '/donor/list?pageNum=1&pageSize=20';
+            if (bloodType) url += '&bloodType=' + encodeURIComponent(bloodType);
+            if (name) url += '&name=' + encodeURIComponent(name);
+            if (sort.field) url += '&sortField=' + encodeURIComponent(sort.field) + '&sortOrder=' + encodeURIComponent(sort.order);
+            const result = await fetchData(url);
+            const tbody = document.getElementById('donor-table-body');
+            if (!result?.data?.records?.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">暂无数据</td></tr>';
+                return;
+            }
+            tbody.innerHTML = result.data.records.map(d => `
+                <tr>
+                    <td>${d.name}</td>
+                    <td>${d.idCard ? '******' + d.idCard.slice(-4) : ''}</td>
+                    <td>${d.bloodType}</td>
+                    <td>${d.phone}</td>
+                    <td><span class="status-badge ${d.donorStatus === '正常' ? 'status-completed' : 'status-pending'}">${d.donorStatus}</span></td>
+                    <td>
+                        <button class="btn btn-warning" onclick="editDonor('${d.id}')">修改</button>
+                        <button class="btn btn-danger" onclick="deleteDonor('${d.id}')">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function editDonor(id) {
+            const result = await fetchData('/donor/' + id);
+            if (!result?.data) return;
+            const d = result.data;
+            document.getElementById('donor-id').value = d.id;
+            document.getElementById('donor-user-id').value = d.userId || '';
+            document.getElementById('donor-name').value = d.name || '';
+            document.getElementById('donor-id-card').value = '';
+            document.getElementById('donor-blood-type').value = d.bloodType || 'A型';
+            document.getElementById('donor-phone').value = d.phone || '';
+            document.getElementById('donor-gender').value = d.gender || '';
+            document.getElementById('donor-address').value = d.address || '';
+            document.getElementById('donor-medical-history').value = d.medicalHistory || '';
+            showTab('donor-add');
+        }
+
+        async function saveDonor() {
+            const donorId = document.getElementById('donor-id').value;
+            const idCard = document.getElementById('donor-id-card').value.trim();
+            const data = {
+                id: donorId ? donorId : null,
+                userId: parseInt(document.getElementById('donor-user-id').value) || null,
+                name: document.getElementById('donor-name').value.trim(),
+                bloodType: document.getElementById('donor-blood-type').value,
+                phone: document.getElementById('donor-phone').value.trim(),
+                gender: document.getElementById('donor-gender').value || null,
+                address: document.getElementById('donor-address').value.trim() || null,
+                medicalHistory: document.getElementById('donor-medical-history').value.trim() || null
+            };
+            if (!data.name || !data.phone || (!donorId && !idCard)) {
+                alert('请填写必填项');
+                return;
+            }
+            if (idCard) {
+                data.idCard = idCard;
+            }
+            const method = donorId ? 'PUT' : 'POST';
+            const url = donorId ? '/donor/update' : '/donor/add';
+            const result = await fetchData(url, { method, body: JSON.stringify(data) });
+            if (result && result.code === 200) {
+                alert('保存成功');
+                resetDonorForm();
+                showTab('donor-list');
+            } else {
+                alert(result?.msg || '保存失败');
+            }
+        }
+
+        function resetDonorForm() {
+            document.getElementById('donor-id').value = '';
+            document.getElementById('donor-user-id').value = '';
+            document.getElementById('donor-name').value = '';
+            document.getElementById('donor-id-card').value = '';
+            document.getElementById('donor-blood-type').value = 'A型';
+            document.getElementById('donor-phone').value = '';
+            document.getElementById('donor-gender').value = '';
+            document.getElementById('donor-address').value = '';
+            document.getElementById('donor-medical-history').value = '';
+        }
+
+        async function deleteDonor(id) {
+            if (confirm('确定删除该档案吗？')) {
+                const response = await fetch(API_BASE + '/donor/delete/' + id, { method: 'DELETE', headers: getHeaders() });
+                const result = await response.json();
+                if (response.ok && result.code === 200) {
+                    alert('删除成功');
+                    loadDonorList();
+                } else {
+                    alert('删除失败：' + (result.message || '未知错误'));
+                }
+            }
+        }
+
+        async function loadActivityList() {
+            const sort = getSortParam('activity-table');
+            let url = '/activity/list?pageNum=1&pageSize=20';
+            if (sort.field) url += '&sortField=' + encodeURIComponent(sort.field) + '&sortOrder=' + encodeURIComponent(sort.order);
+            const result = await fetchData(url);
+            const tbody = document.getElementById('activity-table-body');
+            if (!result?.data?.records?.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">暂无数据</td></tr>';
+                return;
+            }
+            tbody.innerHTML = result.data.records.map(a => `
+                <tr>
+                    <td>${a.activityName}</td>
+                    <td>${a.location}</td>
+                    <td>${a.activityDate}</td>
+                    <td><span class="status-badge ${getStatusClass(a.status)}">${a.status}</span></td>
+                    <td>${a.morningRemaining}/${a.morningQuota}</td>
+                    <td>${a.afternoonRemaining}/${a.afternoonQuota}</td>
+                    <td>
+                        <button class="btn btn-warning" onclick="editActivity('${a.id}')">修改</button>
+                        <button class="btn btn-danger" onclick="deleteActivity('${a.id}')">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function editActivity(id) {
+            const result = await fetchData('/activity/' + id);
+            if (!result?.data) {
+                alert('获取活动信息失败');
+                return;
+            }
+            const a = result.data;
+            document.getElementById('activity-id').value = a.id;
+            document.getElementById('activity-name').value = a.activityName || '';
+            document.getElementById('activity-location').value = a.location || '';
+            document.getElementById('activity-date').value = a.activityDate || '';
+            document.getElementById('activity-morning-quota').value = a.morningQuota || 50;
+            document.getElementById('activity-afternoon-quota').value = a.afternoonQuota || 50;
+            showTab('activity-add');
+        }
+
+        async function saveActivity() {
+            const activityId = document.getElementById('activity-id').value;
+            const data = {
+                id: activityId ? activityId : null,
+                activityName: document.getElementById('activity-name').value,
+                location: document.getElementById('activity-location').value,
+                activityDate: document.getElementById('activity-date').value,
+                morningQuota: parseInt(document.getElementById('activity-morning-quota').value) || 0,
+                afternoonQuota: parseInt(document.getElementById('activity-afternoon-quota').value) || 0
+            };
+            const method = activityId ? 'PUT' : 'POST';
+            const url = activityId ? '/activity/update' : '/activity/add';
+            const result = await fetchData(url, { method, body: JSON.stringify(data) });
+            if (result && result.code === 200) {
+                alert('保存成功');
+                document.getElementById('activity-id').value = '';
+                showTab('activity-list');
+            } else {
+                alert(result?.msg || '保存失败');
+            }
+        }
+
+        async function deleteActivity(id) {
+            if (confirm('确定删除该活动吗？')) {
+                const response = await fetch(API_BASE + '/activity/delete/' + id, { method: 'DELETE', headers: getHeaders() });
+                const result = await response.json();
+                if (response.ok && result.code === 200) {
+                    alert('删除成功');
+                    loadActivityList();
+                } else {
+                    alert(result?.msg || '删除失败');
+                }
+            }
+        }
+
+        async function loadCollectionList() {
+            const sort = getSortParam('collection-table');
+            let url = '/collection/list?pageNum=1&pageSize=20';
+            if (sort.field) url += '&sortField=' + encodeURIComponent(sort.field) + '&sortOrder=' + encodeURIComponent(sort.order);
+            const result = await fetchData(url);
+            const tbody = document.getElementById('collection-table-body');
+            if (!result?.data?.records?.length) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">暂无数据</td></tr>';
+                return;
+            }
+            tbody.innerHTML = result.data.records.map(c => {
+                const donor = donorsMap[c.donorId] || {};
+                return `
+                <tr>
+                    <td>${donor.name || '-'}</td>
+                    <td>${c.donorIdCard ? '******' + c.donorIdCard.slice(-4) : '-'}</td>
+                    <td>${donor.bloodType || '-'}</td>
+                    <td>${c.donateAmount}</td>
+                    <td>${c.donateType}</td>
+                    <td><span class="status-badge ${getStatusClass(c.initialScreenResult)}">${c.initialScreenResult}</span></td>
+                    <td>${c.collectionTime?.split(' ')[0] || '-'}</td>
+                    <td>
+                        <button class="btn btn-warning" onclick="editCollection('${c.id}')">修改</button>
+                        <button class="btn btn-danger" onclick="deleteCollection('${c.id}')">删除</button>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function resetCollectionForm() {
+            document.getElementById('collection-title').textContent = '新增采血记录';
+            document.getElementById('collection-id').value = '';
+            document.getElementById('selected-donor-id').value = '';
+            document.getElementById('donor-search-input').value = '';
+            document.getElementById('donor-search-results').style.display = 'none';
+            document.getElementById('selected-donor-info').style.display = 'none';
+            document.getElementById('collection-amount').value = '';
+            document.getElementById('collection-type').value = '全血';
+            document.getElementById('collection-result').value = '合格';
+            document.getElementById('collection-message').innerHTML = '';
+        }
+
+        async function searchDonors() {
+            const keyword = document.getElementById('donor-search-input').value.trim();
+            const resultsDiv = document.getElementById('donor-search-results');
+            if (!keyword) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+            const donors = await fetchData('/donor/list?pageNum=1&pageSize=20');
+            const filtered = donors?.data?.records?.filter(d => 
+                d.name && d.name.includes(keyword)
+            ) || [];
+            if (!filtered.length) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+            resultsDiv.innerHTML = filtered.map(d => `
+                <div style="padding:8px;border-bottom:1px solid #eee;cursor:pointer;" 
+                     onclick="selectDonor('${d.id}', '${d.name}', '${d.bloodType || ''}', '${d.idCard || ''}')">
+                    ${d.name} - ${d.bloodType || '未知血型'} - ${d.idCard ? '******' + d.idCard.slice(-4) : '无身份证'}
+                </div>
+            `).join('');
+            resultsDiv.style.display = 'block';
+        }
+
+        function selectDonor(id, name, bloodType, idCard) {
+            document.getElementById('selected-donor-id').value = id;
+            document.getElementById('selected-donor-name').textContent = name;
+            document.getElementById('selected-donor-blood-type').textContent = ' - ' + bloodType;
+            document.getElementById('selected-donor-id-card').textContent = ' - ' + (idCard ? '******' + idCard.slice(-4) : '');
+            document.getElementById('selected-donor-info').style.display = 'block';
+            document.getElementById('donor-search-results').style.display = 'none';
+            document.getElementById('donor-search-input').value = '';
+        }
+
+        async function editCollection(id) {
+            const result = await fetchData('/collection/' + encodeURIComponent(id));
+            if (!result?.data) return;
+            const c = result.data;
+            document.getElementById('collection-title').textContent = '修改采血记录';
+            document.getElementById('collection-id').value = c.id;
+            document.getElementById('collection-amount').value = c.donateAmount;
+            document.getElementById('collection-type').value = c.donateType;
+            document.getElementById('collection-result').value = c.initialScreenResult;
+            document.getElementById('collection-message').innerHTML = '';
+            
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+            document.getElementById('collection-add').style.display = 'block';
+        }
+
+        async function saveCollection() {
+            const collectionId = document.getElementById('collection-id').value;
+            const isEdit = collectionId !== '';
+            
+            if (!isEdit) {
+                const donorId = document.getElementById('selected-donor-id').value;
+                if (!donorId) {
+                    alert('请先选择献血者');
+                    return;
+                }
+            }
+            
+            const data = isEdit ? {
+                id: collectionId,
+                donateAmount: parseInt(document.getElementById('collection-amount').value),
+                donateType: document.getElementById('collection-type').value,
+                initialScreenResult: document.getElementById('collection-result').value
+            } : {
+                donorId: document.getElementById('selected-donor-id').value,
+                donateAmount: parseInt(document.getElementById('collection-amount').value),
+                donateType: document.getElementById('collection-type').value,
+                initialScreenResult: document.getElementById('collection-result').value
+            };
+            const method = isEdit ? 'PUT' : 'POST';
+            const url = isEdit ? '/collection/update' : '/collection/add';
+            const result = await fetchData(url, { method, body: JSON.stringify(data) });
+            if (result && result.code === 200) {
+                document.getElementById('collection-message').innerHTML = '<div class="message success">保存成功</div>';
+                setTimeout(() => {
+                    resetCollectionForm();
+                    showTab('collection-list');
+                }, 1000);
+            } else {
+                document.getElementById('collection-message').innerHTML = `<div class="message error">${result?.msg || '保存失败'}</div>`;
+            }
+        }
+
+        async function deleteCollection(id) {
+            if (confirm('确定删除该采血记录吗？')) {
+                const result = await fetchData('/collection/delete/' + encodeURIComponent(id), { method: 'DELETE' });
+                if (result && result.code === 200) {
+                    alert('删除成功');
+                    await Promise.all([loadDonorsMap(), loadCollectionsMap()]);
+                    loadCollectionList();
+                } else {
+                    alert('删除失败：' + (result?.msg || '未知错误'));
+                }
+            }
+        }
+
+        async function loadTestList() {
+            const sort = getSortParam('test-table');
+            let url = '/blood-test/list';
+            if (sort.field) url += '?sortField=' + encodeURIComponent(sort.field) + '&sortOrder=' + encodeURIComponent(sort.order);
+            const result = await fetchData(url);
+            const tbody = document.getElementById('test-table-body');
+            if (!result?.data?.length) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">暂无数据</td></tr>';
+                return;
+            }
+            tbody.innerHTML = result.data.map(t => {
+                const donor = donorsMap[t.donorId] || {};
+                const collection = collectionsMap[t.collectionId] || {};
+                return `
+                <tr>
+                    <td>${donor.name || '-'}</td>
+                    <td>${donor.bloodType || '-'}</td>
+                    <td>${collection.donateAmount || '-'}</td>
+                    <td>${t.recheckResult || '-'}</td>
+                    <td><span class="status-badge ${getStatusClass(t.bloodStatus)}">${t.bloodStatus}</span></td>
+                    <td>${t.unqualifiedReason || '-'}</td>
+                    <td>${t.judgeTime?.split(' ')[0] || '-'}</td>
+                    <td>
+                        ${t.bloodStatus !== '已入库' ? 
+                            `<button class="btn btn-warning" onclick="editTest('${t.id}')">修改</button>` : 
+                            '<span style="color:#999;">已入库</span>'}
+                        ${t.bloodStatus !== '已入库' ? 
+                            `<button class="btn btn-danger" onclick="deleteTest('${t.id}')">删除</button>` : ''}
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        async function editTest(id) {
+            const result = await fetchData('/blood-test/' + encodeURIComponent(id));
+            if (!result?.data) return;
+            const t = result.data;
+            const donor = donorsMap[t.donorId] || {};
+            const collection = collectionsMap[t.collectionId] || {};
+            
+            document.getElementById('modal-title').textContent = '修改检验记录';
+            document.getElementById('modal-body').innerHTML = `
+                <form id="test-edit-form">
+                    <input type="hidden" id="test-id" value="${t.id}">
+                    <div class="form-group"><label>献血者</label><input type="text" value="${donor.name || '-'}" disabled></div>
+                    <div class="form-group"><label>血型</label><input type="text" value="${donor.bloodType || '-'}" disabled></div>
+                    <div class="form-group"><label>献血量(ml)</label><input type="text" value="${collection.donateAmount || '-'}" disabled></div>
+                    <div class="form-group"><label>复检结果</label>
+                        <select id="test-recheck-result">
+                            <option value="">请选择</option>
+                            <option value="合格" ${t.recheckResult === '合格' ? 'selected' : ''}>合格</option>
+                            <option value="不合格" ${t.recheckResult === '不合格' ? 'selected' : ''}>不合格</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>血液状态</label>
+                        <select id="test-blood-status">
+                            <option value="待检验" ${t.bloodStatus === '待检验' ? 'selected' : ''}>待检验</option>
+                            <option value="合格" ${t.bloodStatus === '合格' ? 'selected' : ''}>合格</option>
+                            <option value="不合格" ${t.bloodStatus === '不合格' ? 'selected' : ''}>不合格</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>不合格原因</label><input type="text" id="test-reason" value="${t.unqualifiedReason || ''}"></div>
+                    <div class="form-group"><label>备注</label><textarea id="test-remark" rows="3">${t.remark || ''}</textarea></div>
+                    <button type="button" class="btn" onclick="saveTest()">保存</button>
+                </form>
+            `;
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        async function saveTest() {
+            const data = {
+                testId: document.getElementById('test-id').value,
+                recheckResult: document.getElementById('test-recheck-result').value,
+                bloodStatus: document.getElementById('test-blood-status').value,
+                unqualifiedReason: document.getElementById('test-reason').value,
+                remark: document.getElementById('test-remark').value
+            };
+            const result = await fetchData('/blood-test/judge', { method: 'PUT', body: JSON.stringify(data) });
+            if (result && result.code === 200) {
+                document.getElementById('modal-message').innerHTML = '<div class="message success">保存成功</div>';
+                setTimeout(() => {
+                    closeModal();
+                    loadTestList();
+                }, 1000);
+            } else {
+                document.getElementById('modal-message').innerHTML = `<div class="message error">${result?.msg || '保存失败'}</div>`;
+            }
+        }
+
+        async function deleteTest(id) {
+            if (confirm('确定删除该检验记录吗？')) {
+                const result = await fetchData('/blood-test/delete/' + encodeURIComponent(id), { method: 'DELETE' });
+                if (result && result.code === 200) {
+                    alert('删除成功');
+                    loadTestList();
+                } else {
+                    alert('删除失败：' + (result?.msg || '未知错误'));
+                }
+            }
+        }
+
+        async function loadStockList() {
+            const sort = getSortParam('stock-table');
+            let url = '/stock/list';
+            if (sort.field) url += '?sortField=' + encodeURIComponent(sort.field) + '&sortOrder=' + encodeURIComponent(sort.order);
+            const result = await fetchData(url);
+            const tbody = document.getElementById('stock-table-body');
+            if (!result?.data?.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">暂无数据</td></tr>';
+                return;
+            }
+            tbody.innerHTML = result.data.map(s => {
+                const collection = collectionsMap[s.collectionId];
+                const donor = collection ? donorsMap[collection.donorId] : {};
+                return `
+                <tr>
+                    <td>${donor.name || '-'}</td>
+                    <td>${s.bloodType}</td>
+                    <td>${s.bloodAmount}</td>
+                    <td>${s.expireDate}</td>
+                    <td><span class="status-badge ${getStatusClass(s.status)}">${s.status}</span></td>
+                    <td>${s.createTime?.split(' ')[0] || '-'}</td>
+                    <td>
+                        ${s.status === '正常' ? 
+                            `<button class="btn btn-warning" onclick="editStock('${s.id}')">修改</button>` : ''}
+                        ${s.status === '正常' || s.status === '临期' || s.status === '已过期' ? 
+                            `<button class="btn btn-primary" onclick="stockOut('${s.id}')">出库</button>` : ''}
+                        ${s.status !== '已出库' ? 
+                            `<button class="btn btn-danger" onclick="deleteStock('${s.id}')">删除</button>` : ''}
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        async function editStock(id) {
+            const result = await fetchData('/stock/' + id);
+            if (!result?.data) return;
+            const s = result.data;
+            const collection = collectionsMap[s.collectionId];
+            const donor = collection ? donorsMap[collection.donorId] : {};
+            
+            document.getElementById('modal-title').textContent = '修改库存信息';
+            document.getElementById('modal-body').innerHTML = `
+                <form id="stock-edit-form">
+                    <input type="hidden" id="stock-id" value="${s.id}">
+                    <div class="form-group"><label>献血者</label><input type="text" value="${donor.name || '-'}" disabled></div>
+                    <div class="form-group"><label>血型</label><input type="text" value="${s.bloodType || '-'}" disabled></div>
+                    <div class="form-group"><label>血量(ml)</label><input type="text" value="${s.bloodAmount || '-'}" disabled></div>
+                    <div class="form-group"><label>有效期</label><input type="date" id="stock-expire-date" value="${s.expireDate}"></div>
+                    <button type="button" class="btn" onclick="saveStock()">保存</button>
+                </form>
+            `;
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        async function saveStock() {
+            const data = {
+                id: document.getElementById('stock-id').value,
+                expireDate: document.getElementById('stock-expire-date').value
+            };
+            const result = await fetchData('/stock/update', { method: 'PUT', body: JSON.stringify(data) });
+            if (result && result.code === 200) {
+                document.getElementById('modal-message').innerHTML = '<div class="message success">保存成功</div>';
+                setTimeout(() => {
+                    closeModal();
+                    loadStockList();
+                }, 1000);
+            } else {
+                document.getElementById('modal-message').innerHTML = `<div class="message error">${result?.msg || '保存失败'}</div>`;
+            }
+        }
+
+        async function stockOut(id) {
+            const result = await fetchData('/stock/' + id);
+            if (!result?.data) return;
+            const s = result.data;
+            
+            document.getElementById('modal-title').textContent = '血液出库';
+            document.getElementById('modal-body').innerHTML = `
+                <form id="stock-out-form">
+                    <input type="hidden" id="stock-out-id" value="${s.id}">
+                    <div class="form-group"><label>血型</label><input type="text" value="${s.bloodType}" disabled></div>
+                    <div class="form-group"><label>血量(ml)</label><input type="text" value="${s.bloodAmount}" disabled></div>
+                    <div class="form-group"><label>用血单位</label><input type="text" id="stock-out-unit" placeholder="请输入用血单位" required></div>
+                    <button type="button" class="btn" onclick="confirmStockOut()">确认出库</button>
+                </form>
+            `;
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        async function confirmStockOut() {
+            const id = document.getElementById('stock-out-id').value;
+            const outUnit = document.getElementById('stock-out-unit').value;
+            const result = await fetchData('/stock/out/' + id, { method: 'PUT', body: JSON.stringify({ outUnit }) });
+            if (result && result.code === 200) {
+                document.getElementById('modal-message').innerHTML = '<div class="message success">出库成功</div>';
+                setTimeout(() => {
+                    closeModal();
+                    loadStockList();
+                }, 1000);
+            } else {
+                document.getElementById('modal-message').innerHTML = `<div class="message error">${result?.msg || '出库失败'}</div>`;
+            }
+        }
+
+        async function deleteStock(id) {
+            if (confirm('确定删除该库存记录吗？')) {
+                await fetch(API_BASE + '/stock/delete/' + id, { method: 'DELETE', headers: getHeaders() });
+                loadStockList();
+            }
+        }
+
+        async function saveStockIn() {
+            const data = {
+                collectionId: document.getElementById('stock-collection-id').value,
+                expireDate: document.getElementById('stock-expire-date').value
+            };
+            const result = await fetchData('/stock/in', { method: 'POST', body: JSON.stringify(data) });
+            if (result && result.code === 200) {
+                alert('入库成功');
+                showTab('stock-list');
+            } else {
+                alert(result?.msg || '入库失败');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+            document.getElementById('modal-message').innerHTML = '';
+        }
+
+        async function loadReport() {
+            const donors = await fetchData('/donor/list?pageNum=1&pageSize=1000');
+            document.getElementById('report-donor-count').textContent = donors?.data?.total || 0;
+        }
+
+        function exportReport() {
+            window.open(API_BASE + '/report/export?type=all', '_blank');
+        }
+
+        function getStatusClass(status) {
+            switch(status) {
+                case '未开始': case '待检验': case '待参加': return 'status-pending';
+                case '进行中': return 'status-active';
+                case '已完成': case '合格': case '正常': return 'status-completed';
+                case '已取消': case '不合格': case '已过期': return 'status-canceled';
+                default: return 'status-pending';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!getToken()) window.location.href = 'index.html';
+            document.getElementById('user-name').textContent = localStorage.getItem('username') || '管理员';
+            loadStats();
+        });
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('edit-modal')) closeModal();
+        }
+    </script>
+</body>
+</html>

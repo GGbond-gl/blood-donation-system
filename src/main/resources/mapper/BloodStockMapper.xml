@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sdut.blood.mapper.BloodStockMapper">
+
+    <resultMap id="BaseResultMap" type="com.sdut.blood.domain.entity.BloodStock">
+        <id column="id" property="id"/>
+        <result column="collection_id" property="collectionId"/>
+        <result column="blood_type" property="bloodType"/>
+        <result column="blood_amount" property="bloodAmount"/>
+        <result column="expire_date" property="expireDate"/>
+        <result column="status" property="status"/>
+        <result column="out_unit" property="outUnit"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, collection_id, blood_type, blood_amount, expire_date, status, out_unit,
+        create_time, update_time, deleted
+    </sql>
+
+    <!-- 按血型统计库存总量 -->
+    <select id="selectStockTotalByBloodType" resultType="map">
+        SELECT
+            blood_type,
+            SUM(blood_amount) AS total_amount,
+            COUNT(*) AS record_count
+        FROM blood_stock
+        WHERE blood_type = #{bloodType}
+          AND status = '正常'
+          AND deleted = 0
+        GROUP BY blood_type
+    </select>
+
+    <!-- 查询临期库存 -->
+    <select id="selectNearExpireList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM blood_stock
+        WHERE DATEDIFF(expire_date, CURDATE()) &lt;= #{days}
+        AND status = '正常'
+        AND deleted = 0
+        ORDER BY expire_date ASC
+    </select>
+
+    <!-- 按日期统计入库量 -->
+    <select id="selectDailyStockIn" resultType="map">
+        SELECT DATE(create_time) as date, blood_type, SUM(blood_amount) as in_amount
+        FROM blood_stock
+        WHERE create_time &gt;= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+          AND status IN ('正常', '临期', '已出库')
+          AND deleted = 0
+        GROUP BY DATE(create_time), blood_type
+        ORDER BY date DESC
+    </select>
+
+    <!-- 按日期统计出库量 -->
+    <select id="selectDailyStockOut" resultType="map">
+        SELECT DATE(update_time) as date, blood_type, SUM(blood_amount) as out_amount
+        FROM blood_stock
+        WHERE status = '已出库'
+          AND update_time &gt;= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+          AND deleted = 0
+        GROUP BY DATE(update_time), blood_type
+        ORDER BY date DESC
+    </select>
+
+</mapper>
