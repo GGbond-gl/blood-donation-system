@@ -1706,8 +1706,8 @@ body.legacy-page {
         <div class="menu-group">
             <a href="#stock" onclick="toggleMenu(this)">血液库存管理</a>
             <div class="sub-menu">
-                <a href="#stock-list" onclick="showTab('stock-list')">库存明细</a>
                 <a href="#stock-in" onclick="showTab('stock-in')">血液入库</a>
+                <a href="#stock-list" onclick="showTab('stock-list')">库存明细</a>
                 <a href="#stock-out" onclick="showTab('stock-out')">血液出库</a>
             </div>
         </div>
@@ -2098,17 +2098,18 @@ body.legacy-page {
                     <button class="btn btn-primary" onclick="exportStocks()">导出Excel报表</button>
                 </div>
                 <table id="stock-table">
-                    <thead><tr>
-                        <th>献血者姓名</th>
-                        <th class="sortable" data-sort="bloodType" onclick="toggleSort('stock-table', 'bloodType'); loadStockList()">血型</th>
-                        <th class="sortable" data-sort="bloodAmount" onclick="toggleSort('stock-table', 'bloodAmount'); loadStockList()">血量(ml)</th>
-                        <th class="sortable" data-sort="expireDate" onclick="toggleSort('stock-table', 'expireDate'); loadStockList()">有效期</th>
-                        <th class="sortable" data-sort="status" onclick="toggleSort('stock-table', 'status'); loadStockList()">状态</th>
-                        <th class="sortable" data-sort="createTime" onclick="toggleSort('stock-table', 'createTime'); loadStockList()">入库时间</th>
-                        <th>操作</th>
-                    </tr></thead>
-                    <tbody id="stock-table-body"></tbody>
-                </table>
+                        <thead><tr>
+                            <th>献血者姓名</th>
+                            <th class="sortable" data-sort="bloodType" onclick="toggleSort('stock-table', 'bloodType'); loadStockList()">血型</th>
+                            <th class="sortable" data-sort="bloodAmount" onclick="toggleSort('stock-table', 'bloodAmount'); loadStockList()">血量(ml)</th>
+                            <th class="sortable" data-sort="expireDate" onclick="toggleSort('stock-table', 'expireDate'); loadStockList()">有效期</th>
+                            <th class="sortable" data-sort="status" onclick="toggleSort('stock-table', 'status'); loadStockList()">状态</th>
+                            <th>用血单位</th>
+                            <th class="sortable" data-sort="createTime" onclick="toggleSort('stock-table', 'createTime'); loadStockList()">入库时间</th>
+                            <th>操作</th>
+                        </tr></thead>
+                        <tbody id="stock-table-body"></tbody>
+                    </table>
             </div>
         </div>
 
@@ -2118,23 +2119,43 @@ body.legacy-page {
                     <h2>血液入库</h2>
                     <button class="btn btn-primary" onclick="exportPendingStockIn()">导出Excel报表</button>
                 </div>
-                <p style="color:var(--apple-muted); font-size:14px; margin-bottom:15px;">检验合格的采血记录将自动显示在此列表中，请选择需要入库的记录并填写有效期</p>
-                <table id="pending-stock-table">
-                    <thead><tr>
-                        <th><input type="checkbox" id="select-all-pending" onclick="toggleSelectAllPending()"></th>
-                        <th>献血者姓名</th>
-                        <th>血型</th>
-                        <th>血量(ml)</th>
-                        <th>献血类型</th>
-                        <th>采血时间</th>
-                        <th>检验时间</th>
-                        <th>有效期</th>
-                    </tr></thead>
-                    <tbody id="pending-stock-table-body"></tbody>
-                </table>
-                <div style="margin-top:20px; display:flex; gap:15px; align-items:center;">
-                    <button class="btn btn-primary" onclick="saveStockIn()">确认入库</button>
-                    <button class="btn btn-warning" onclick="loadPendingStockList()">刷新列表</button>
+                <div style="margin-bottom:30px;">
+                    <h3 style="margin-bottom:15px; color:var(--apple-ink); font-size:18px;">待入库血液</h3>
+                    <p style="color:var(--apple-muted); font-size:14px; margin-bottom:15px;">检验合格但未入库的采血记录将显示在此列表中，请选择需要入库的记录并填写有效期</p>
+                    <table id="pending-stock-table">
+                        <thead><tr>
+                            <th><input type="checkbox" id="select-all-pending" onclick="toggleSelectAllPending()"></th>
+                            <th>献血者姓名</th>
+                            <th>血型</th>
+                            <th>血量(ml)</th>
+                            <th>献血类型</th>
+                            <th>采血时间</th>
+                            <th>检验时间</th>
+                            <th>有效期</th>
+                        </tr></thead>
+                        <tbody id="pending-stock-table-body"></tbody>
+                    </table>
+                    <div style="margin-top:20px; display:flex; gap:15px; align-items:center;">
+                        <button class="btn btn-primary" onclick="saveStockIn()">确认入库</button>
+                        <button class="btn btn-warning" onclick="loadPendingStockList()">刷新列表</button>
+                    </div>
+                </div>
+                <div style="border-top: 1px solid var(--apple-border); padding-top:20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3 style="color:var(--apple-ink); font-size:18px;">入库操作历史</h3>
+                        <button class="btn btn-primary" onclick="exportStockInHistory()">导出Excel报表</button>
+                    </div>
+                    <table id="stock-in-history-table">
+                        <thead><tr>
+                            <th>献血者姓名</th>
+                            <th>血型</th>
+                            <th>血量(ml)</th>
+                            <th>献血类型</th>
+                            <th>有效期</th>
+                            <th>入库时间</th>
+                        </tr></thead>
+                        <tbody id="stock-in-history-table-body"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -2145,24 +2166,45 @@ body.legacy-page {
                     <h2>血液出库</h2>
                     <button class="btn btn-primary" onclick="exportPendingStockOut()">导出Excel报表</button>
                 </div>
-                <p style="color:var(--apple-muted); font-size:14px; margin-bottom:15px;">选择需要出库的库存记录并填写用血单位后确认出库</p>
-                <table id="pending-out-table">
-                    <thead><tr>
-                        <th><input type="checkbox" id="select-all-out" onclick="toggleSelectAllOut()"></th>
-                        <th>献血者姓名</th>
-                        <th>血型</th>
-                        <th>血量(ml)</th>
-                        <th>献血类型</th>
-                        <th>有效期</th>
-                        <th>库存状态</th>
-                        <th>入库时间</th>
-                        <th>用血单位</th>
-                    </tr></thead>
-                    <tbody id="pending-out-table-body"></tbody>
-                </table>
-                <div style="margin-top:20px; display:flex; gap:15px; align-items:center;">
-                    <button class="btn btn-primary" onclick="confirmBatchStockOut()">确认出库</button>
-                    <button class="btn btn-warning" onclick="loadStockOutPendingList()">刷新列表</button>
+                <div style="margin-bottom:30px;">
+                    <h3 style="margin-bottom:15px; color:var(--apple-ink); font-size:18px;">待出库血液</h3>
+                    <p style="color:var(--apple-muted); font-size:14px; margin-bottom:15px;">已入库但未出库的血液记录将显示在此列表中，请选择需要出库的记录并填写用血单位</p>
+                    <table id="pending-out-table">
+                        <thead><tr>
+                            <th><input type="checkbox" id="select-all-out" onclick="toggleSelectAllOut()"></th>
+                            <th>献血者姓名</th>
+                            <th>血型</th>
+                            <th>血量(ml)</th>
+                            <th>献血类型</th>
+                            <th>有效期</th>
+                            <th>库存状态</th>
+                            <th>入库时间</th>
+                            <th>用血单位</th>
+                        </tr></thead>
+                        <tbody id="pending-out-table-body"></tbody>
+                    </table>
+                    <div style="margin-top:20px; display:flex; gap:15px; align-items:center;">
+                        <button class="btn btn-primary" onclick="confirmBatchStockOut()">确认出库</button>
+                        <button class="btn btn-warning" onclick="loadStockOutPendingList()">刷新列表</button>
+                    </div>
+                </div>
+                <div style="border-top: 1px solid var(--apple-border); padding-top:20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3 style="color:var(--apple-ink); font-size:18px;">出库操作历史</h3>
+                        <button class="btn btn-primary" onclick="exportStockOutHistory()">导出Excel报表</button>
+                    </div>
+                    <table id="stock-out-history-table">
+                        <thead><tr>
+                            <th>献血者姓名</th>
+                            <th>血型</th>
+                            <th>血量(ml)</th>
+                            <th>献血类型</th>
+                            <th>有效期</th>
+                            <th>用血单位</th>
+                            <th>出库时间</th>
+                        </tr></thead>
+                        <tbody id="stock-out-history-table-body"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -2356,8 +2398,8 @@ body.legacy-page {
             if (tabId === 'collection-add') resetCollectionForm();
             if (tabId === 'test-list') { await Promise.all([loadDonorsMap(), loadCollectionsMap()]); loadTestList(); }
             if (tabId === 'stock-list') { await Promise.all([loadDonorsMap(), loadCollectionsMap()]); loadStockList(); }
-            if (tabId === 'stock-in') loadPendingStockList();
-            if (tabId === 'stock-out') loadStockOutPendingList();
+            if (tabId === 'stock-in') { await Promise.all([loadDonorsMap(), loadCollectionsMap()]); loadPendingStockList(); loadStockInHistory(); }
+            if (tabId === 'stock-out') { await Promise.all([loadDonorsMap(), loadCollectionsMap()]); loadStockOutPendingList(); loadStockOutHistory(); }
             if (tabId === 'operation-log') loadOperationLogs();
             if (tabId === 'user-manage') loadUserManageList();
             if (tabId === 'home') loadStats();
@@ -2987,7 +3029,7 @@ body.legacy-page {
             const result = await fetchData(url);
             const tbody = document.getElementById('stock-table-body');
             if (!result?.data?.length) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">暂无数据</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">暂无数据</td></tr>';
                 return;
             }
             tbody.innerHTML = result.data.map(s => {
@@ -3000,6 +3042,7 @@ body.legacy-page {
                     <td>${s.bloodAmount}</td>
                     <td>${s.expireDate}</td>
                     <td><span class="status-badge ${getStatusClass(s.status)}">${s.status}</span></td>
+                    <td>${s.outUnit || '-'}</td>
                     <td>${s.createTime?.split(' ')[0] || '-'}</td>
                     <td>
                         ${s.status === '正常' ? 
@@ -3122,6 +3165,7 @@ body.legacy-page {
             if (successCount > 0) {
                 alert(`成功入库 ${successCount} 条记录${failCount > 0 ? '，失败 ' + failCount + ' 条' : ''}`);
                 loadPendingStockList();
+                loadStockInHistory();
             } else {
                 alert('入库失败');
             }
@@ -3221,6 +3265,7 @@ body.legacy-page {
             if (successCount > 0) {
                 alert(`成功出库 ${successCount} 条记录${failCount > 0 ? '，失败 ' + failCount + ' 条' : ''}`);
                 loadStockOutPendingList();
+                loadStockOutHistory();
             } else {
                 alert('出库失败');
             }
@@ -3230,6 +3275,45 @@ body.legacy-page {
             const selectAll = document.getElementById('select-all-out');
             const checkboxes = document.querySelectorAll('#pending-out-table-body input[type="checkbox"]');
             checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        }
+
+        async function loadStockInHistory() {
+            const result = await fetchData('/stock/in-history');
+            const tbody = document.getElementById('stock-in-history-table-body');
+            if (!result?.data?.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">暂无入库操作历史</td></tr>';
+                return;
+            }
+            tbody.innerHTML = result.data.map(item => `
+                <tr>
+                    <td>${item.donorName}</td>
+                    <td>${item.bloodType}</td>
+                    <td>${item.bloodAmount}</td>
+                    <td>${item.donateType}</td>
+                    <td>${item.expireDate}</td>
+                    <td>${item.createTime?.split(' ')[0] || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadStockOutHistory() {
+            const result = await fetchData('/stock/out-history');
+            const tbody = document.getElementById('stock-out-history-table-body');
+            if (!result?.data?.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">暂无出库操作历史</td></tr>';
+                return;
+            }
+            tbody.innerHTML = result.data.map(item => `
+                <tr>
+                    <td>${item.donorName}</td>
+                    <td>${item.bloodType}</td>
+                    <td>${item.bloodAmount}</td>
+                    <td>${item.donateType}</td>
+                    <td>${item.expireDate}</td>
+                    <td>${item.outUnit || '-'}</td>
+                    <td>${item.updateTime?.split(' ')[0] || '-'}</td>
+                </tr>
+            `).join('');
         }
 
         function closeModal() {
@@ -3296,6 +3380,14 @@ body.legacy-page {
 
         function exportPendingStockOut() {
             downloadExcel(API_BASE + '/export/pending-stock-out', '待出库记录.xlsx');
+        }
+
+        function exportStockInHistory() {
+            downloadExcel(API_BASE + '/export/stock-in-history', '入库操作历史.xlsx');
+        }
+
+        function exportStockOutHistory() {
+            downloadExcel(API_BASE + '/export/stock-out-history', '出库操作历史.xlsx');
         }
 
         async function loadOperationLogs() {

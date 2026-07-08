@@ -73,4 +73,14 @@ public interface BloodStockService extends IService<BloodStock> {
      * 查询可出库库存记录列表（状态为正常/临期/已过期的库存）
      */
     java.util.List<com.sdut.blood.domain.vo.PendingStockOutVO> listStockOutPending();
+
+    /**
+     * 查询入库操作历史（所有已入库的记录）
+     */
+    java.util.List<com.sdut.blood.domain.vo.StockHistoryVO> listStockInHistory();
+
+    /**
+     * 查询出库操作历史（已出库的记录）
+     */
+    java.util.List<com.sdut.blood.domain.vo.StockHistoryVO> listStockOutHistory();
 }

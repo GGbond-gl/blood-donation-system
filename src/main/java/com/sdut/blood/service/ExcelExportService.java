@@ -55,4 +55,14 @@ public interface ExcelExportService {
      * 导出待出库记录
      */
     ByteArrayOutputStream exportPendingStockOut(List<PendingStockOutVO> records);
+
+    /**
+     * 导出入库操作历史
+     */
+    ByteArrayOutputStream exportStockInHistory(List<com.sdut.blood.domain.vo.StockHistoryVO> records);
+
+    /**
+     * 导出出库操作历史
+     */
+    ByteArrayOutputStream exportStockOutHistory(List<com.sdut.blood.domain.vo.StockHistoryVO> records);
 }

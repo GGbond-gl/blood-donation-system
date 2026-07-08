@@ -320,4 +320,14 @@ public class BloodStockServiceImpl extends ServiceImpl<BloodStockMapper, BloodSt
     public List<com.sdut.blood.domain.vo.PendingStockOutVO> listStockOutPending() {
         return baseMapper.selectStockOutPendingList();
     }
+
+    @Override
+    public List<com.sdut.blood.domain.vo.StockHistoryVO> listStockInHistory() {
+        return baseMapper.selectStockInHistoryList();
+    }
+
+    @Override
+    public List<com.sdut.blood.domain.vo.StockHistoryVO> listStockOutHistory() {
+        return baseMapper.selectStockOutHistoryList();
+    }
 }

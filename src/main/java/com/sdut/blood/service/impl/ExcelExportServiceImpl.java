@@ -153,6 +153,26 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         return outputStream;
     }
 
+    @Override
+    public ByteArrayOutputStream exportStockInHistory(List<com.sdut.blood.domain.vo.StockHistoryVO> records) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        EasyExcel.write(outputStream, StockInHistoryExportDTO.class)
+                .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy())
+                .sheet("入库操作历史")
+                .doWrite(records.stream().map(StockInHistoryExportDTO::new).toList());
+        return outputStream;
+    }
+
+    @Override
+    public ByteArrayOutputStream exportStockOutHistory(List<com.sdut.blood.domain.vo.StockHistoryVO> records) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        EasyExcel.write(outputStream, StockOutHistoryExportDTO.class)
+                .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy())
+                .sheet("出库操作历史")
+                .doWrite(records.stream().map(StockOutHistoryExportDTO::new).toList());
+        return outputStream;
+    }
+
     private List<List<Object>> getOverviewData(StatisticsVO statistics) {
         List<List<Object>> data = new ArrayList<>();
         data.add(List.of("统计项", "数值"));
@@ -386,6 +406,59 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             this.expireDate = vo.getExpireDate() != null ? vo.getExpireDate().toString() : "";
             this.status = vo.getStatus();
             this.createTime = vo.getCreateTime() != null ? vo.getCreateTime().toString() : "";
+        }
+    }
+
+    @lombok.Data
+    public static class StockInHistoryExportDTO {
+        @com.alibaba.excel.annotation.ExcelProperty("献血者姓名")
+        private String donorName;
+        @com.alibaba.excel.annotation.ExcelProperty("血型")
+        private String bloodType;
+        @com.alibaba.excel.annotation.ExcelProperty("血量(ml)")
+        private Integer bloodAmount;
+        @com.alibaba.excel.annotation.ExcelProperty("献血类型")
+        private String donateType;
+        @com.alibaba.excel.annotation.ExcelProperty("有效期")
+        private String expireDate;
+        @com.alibaba.excel.annotation.ExcelProperty("入库时间")
+        private String createTime;
+
+        public StockInHistoryExportDTO(com.sdut.blood.domain.vo.StockHistoryVO vo) {
+            this.donorName = vo.getDonorName();
+            this.bloodType = vo.getBloodType();
+            this.bloodAmount = vo.getBloodAmount();
+            this.donateType = vo.getDonateType();
+            this.expireDate = vo.getExpireDate() != null ? vo.getExpireDate().toString() : "";
+            this.createTime = vo.getCreateTime() != null ? vo.getCreateTime().toString() : "";
+        }
+    }
+
+    @lombok.Data
+    public static class StockOutHistoryExportDTO {
+        @com.alibaba.excel.annotation.ExcelProperty("献血者姓名")
+        private String donorName;
+        @com.alibaba.excel.annotation.ExcelProperty("血型")
+        private String bloodType;
+        @com.alibaba.excel.annotation.ExcelProperty("血量(ml)")
+        private Integer bloodAmount;
+        @com.alibaba.excel.annotation.ExcelProperty("献血类型")
+        private String donateType;
+        @com.alibaba.excel.annotation.ExcelProperty("有效期")
+        private String expireDate;
+        @com.alibaba.excel.annotation.ExcelProperty("用血单位")
+        private String outUnit;
+        @com.alibaba.excel.annotation.ExcelProperty("出库时间")
+        private String updateTime;
+
+        public StockOutHistoryExportDTO(com.sdut.blood.domain.vo.StockHistoryVO vo) {
+            this.donorName = vo.getDonorName();
+            this.bloodType = vo.getBloodType();
+            this.bloodAmount = vo.getBloodAmount();
+            this.donateType = vo.getDonateType();
+            this.expireDate = vo.getExpireDate() != null ? vo.getExpireDate().toString() : "";
+            this.outUnit = vo.getOutUnit() != null ? vo.getOutUnit() : "";
+            this.updateTime = vo.getUpdateTime() != null ? vo.getUpdateTime().toString() : "";
         }
     }
 }
