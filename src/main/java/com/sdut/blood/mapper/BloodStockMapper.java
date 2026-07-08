@@ -39,4 +39,14 @@ public interface BloodStockMapper extends BaseMapper<BloodStock> {
      * 查询可出库库存记录列表（状态为正常/临期/已过期的库存）
      */
     List<com.sdut.blood.domain.vo.PendingStockOutVO> selectStockOutPendingList();
+
+    /**
+     * 查询入库操作历史（所有已入库的记录）
+     */
+    List<com.sdut.blood.domain.vo.StockHistoryVO> selectStockInHistoryList();
+
+    /**
+     * 查询出库操作历史（已出库的记录）
+     */
+    List<com.sdut.blood.domain.vo.StockHistoryVO> selectStockOutHistoryList();
 }

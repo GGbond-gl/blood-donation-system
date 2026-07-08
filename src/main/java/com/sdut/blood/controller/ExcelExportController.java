@@ -147,6 +147,30 @@ public class ExcelExportController {
         }
     }
 
+    /**
+     * 导出入库操作历史
+     */
+    @GetMapping("/stock-in-history")
+    public void exportStockInHistory(HttpServletResponse response) throws IOException {
+        setExcelResponseHeader(response, "入库操作历史");
+        try (OutputStream outputStream = response.getOutputStream()) {
+            var data = excelExportService.exportStockInHistory(bloodStockService.listStockInHistory());
+            outputStream.write(data.toByteArray());
+        }
+    }
+
+    /**
+     * 导出出库操作历史
+     */
+    @GetMapping("/stock-out-history")
+    public void exportStockOutHistory(HttpServletResponse response) throws IOException {
+        setExcelResponseHeader(response, "出库操作历史");
+        try (OutputStream outputStream = response.getOutputStream()) {
+            var data = excelExportService.exportStockOutHistory(bloodStockService.listStockOutHistory());
+            outputStream.write(data.toByteArray());
+        }
+    }
+
     private void setExcelResponseHeader(HttpServletResponse response, String fileName) {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         String encodedFileName = URLEncoder.encode(fileName + "_" + timestamp + ".xlsx", StandardCharsets.UTF_8)

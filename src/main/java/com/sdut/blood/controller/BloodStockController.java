@@ -133,6 +133,24 @@ public class BloodStockController {
     }
 
     /**
+     * 查询入库操作历史
+     */
+    @GetMapping("/in-history")
+    public Result<List<com.sdut.blood.domain.vo.StockHistoryVO>> listStockInHistory() {
+        List<com.sdut.blood.domain.vo.StockHistoryVO> list = bloodStockService.listStockInHistory();
+        return Result.success(list);
+    }
+
+    /**
+     * 查询出库操作历史
+     */
+    @GetMapping("/out-history")
+    public Result<List<com.sdut.blood.domain.vo.StockHistoryVO>> listStockOutHistory() {
+        List<com.sdut.blood.domain.vo.StockHistoryVO> list = bloodStockService.listStockOutHistory();
+        return Result.success(list);
+    }
+
+    /**
      * 查看库存预警列表（UC36）
      */
     @GetMapping("/warning/list")
