@@ -2265,20 +2265,44 @@ body.legacy-page {
 
         <div id="report" class="tab-content" style="display:none;">
             <div class="card">
-                <h2>报表统计</h2>
-                <button class="btn btn-primary" onclick="exportReport()">导出Excel报表</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:15px;">
+                    <h2>报表统计</h2>
+                    <button class="btn btn-primary" onclick="exportReport()">一键导出Excel报表</button>
+                </div>
                 <div class="stats-grid" style="margin-top:20px;">
                     <div class="stat-card">
                         <div class="stat-value" id="report-donor-count">0</div>
-                        <div class="stat-label">年度献血人数</div>
+                        <div class="stat-label">献血者总数</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value" id="report-total-amount">0</div>
-                        <div class="stat-label">年度献血总量(ml)</div>
+                        <div class="stat-label">总献血量(ml)</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="report-qualified-rate">0%</div>
-                        <div class="stat-label">血液合格率</div>
+                        <div class="stat-value" id="report-use-amount">0</div>
+                        <div class="stat-label">总用血量(ml)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="report-activity-count">0</div>
+                        <div class="stat-label">活动总数</div>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin-top:22px;">
+                    <div style="border:1px solid var(--apple-border); border-radius:8px; padding:16px; min-height:300px;">
+                        <h3 style="font-size:18px; margin:0 0 12px;">献血量与用血量对比</h3>
+                        <canvas id="report-amount-chart" style="width:100%; height:240px; display:block;"></canvas>
+                    </div>
+                    <div style="border:1px solid var(--apple-border); border-radius:8px; padding:16px; min-height:300px;">
+                        <h3 style="font-size:18px; margin:0 0 12px;">不合格原因占比</h3>
+                        <canvas id="report-reason-chart" style="width:100%; height:240px; display:block;"></canvas>
+                    </div>
+                    <div style="border:1px solid var(--apple-border); border-radius:8px; padding:16px; min-height:300px;">
+                        <h3 style="font-size:18px; margin:0 0 12px;">献血者年龄分布</h3>
+                        <canvas id="report-age-chart" style="width:100%; height:240px; display:block;"></canvas>
+                    </div>
+                    <div style="border:1px solid var(--apple-border); border-radius:8px; padding:16px; min-height:300px;">
+                        <h3 style="font-size:18px; margin:0 0 12px;">献血者性别分布</h3>
+                        <canvas id="report-gender-chart" style="width:100%; height:240px; display:block;"></canvas>
                     </div>
                 </div>
             </div>
@@ -3471,8 +3495,43 @@ body.legacy-page {
         }
 
         async function loadReport() {
-            const donors = await fetchData('/donor/list?pageNum=1&pageSize=1000');
-            document.getElementById('report-donor-count').textContent = donors?.data?.total || 0;
+            const result = await fetchData('/statistics/overview');
+            const statistics = result?.data;
+            if (!statistics) {
+                document.getElementById('report-donor-count').textContent = 0;
+                document.getElementById('report-total-amount').textContent = 0;
+                document.getElementById('report-use-amount').textContent = 0;
+                document.getElementById('report-activity-count').textContent = 0;
+                renderReportCharts(null);
+                return;
+            }
+            document.getElementById('report-donor-count').textContent = statistics.totalDonors || 0;
+            document.getElementById('report-total-amount').textContent = statistics.totalDonateAmount || 0;
+            document.getElementById('report-use-amount').textContent = statistics.totalUseAmount || 0;
+            document.getElementById('report-activity-count').textContent = statistics.totalActivities || 0;
+            renderReportCharts(statistics);
+        }
+
+        function renderReportCharts(statistics) {
+            const amountItems = statistics ? [
+                { name: '总献血量', value: statistics.totalDonateAmount || 0 },
+                { name: '总用血量', value: statistics.totalUseAmount || 0 }
+            ] : [];
+            const reasonItems = toChartItems(statistics?.unqualifiedReasonDistribution, 'reason', 'count');
+            const ageItems = toChartItems(statistics?.ageDistribution, 'ageGroup', 'count');
+            const genderItems = toChartItems(statistics?.genderDistribution, 'gender', 'count');
+
+            drawAdminBarChart(document.getElementById('report-amount-chart'), amountItems);
+            drawAdminPieChart(document.getElementById('report-reason-chart'), reasonItems);
+            drawAdminBarChart(document.getElementById('report-age-chart'), ageItems);
+            drawAdminPieChart(document.getElementById('report-gender-chart'), genderItems);
+        }
+
+        function toChartItems(data, nameField, valueField) {
+            return (data || []).map(item => ({
+                name: item[nameField] ?? '-',
+                value: Number(item[valueField] || 0)
+            }));
         }
 
         async function downloadExcel(url, fileName) {
@@ -3500,7 +3559,7 @@ body.legacy-page {
         }
 
         function exportReport() {
-            downloadExcel(API_BASE + '/report/export?type=all', '统计报表.xlsx');
+            downloadExcel(API_BASE + '/export/statistics', '统计报表.xlsx');
         }
 
         function exportDonors() {
