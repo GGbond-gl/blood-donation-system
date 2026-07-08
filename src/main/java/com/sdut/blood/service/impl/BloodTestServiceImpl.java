@@ -45,6 +45,13 @@ public class BloodTestServiceImpl extends ServiceImpl<BloodTestMapper, BloodTest
             throw new BusinessException("血液已入库，无法修改判定状态");
         }
 
+        String recheckResult = trimToNull(dto.getRecheckResult());
+        if (recheckResult != null
+                && !BloodConstants.STATUS_QUALIFIED.equals(recheckResult)
+                && BloodConstants.STATUS_QUALIFIED.equals(dto.getBloodStatus())) {
+            throw new BusinessException("复检结果不是合格时，血液状态只能判定为不合格");
+        }
+
         // 3. 不合格必须填写原因
         if (BloodConstants.STATUS_UNQUALIFIED.equals(dto.getBloodStatus())) {
             if (dto.getUnqualifiedReason() == null || dto.getUnqualifiedReason().trim().isEmpty()) {
@@ -58,8 +65,8 @@ public class BloodTestServiceImpl extends ServiceImpl<BloodTestMapper, BloodTest
             throw new BusinessException("请选择血液判定状态");
         }
 
-        if (dto.getRecheckResult() != null) {
-            test.setRecheckResult(dto.getRecheckResult());
+        if (recheckResult != null) {
+            test.setRecheckResult(recheckResult);
         }
         if (dto.getRemark() != null) {
             test.setRemark(dto.getRemark());
@@ -75,6 +82,14 @@ public class BloodTestServiceImpl extends ServiceImpl<BloodTestMapper, BloodTest
         if (BloodConstants.STATUS_UNQUALIFIED.equals(dto.getBloodStatus())) {
             checkAndMarkAttention(test.getDonorId());
         }
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
     
     private void checkAndMarkAttention(Long donorId) {

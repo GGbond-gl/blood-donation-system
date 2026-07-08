@@ -2075,6 +2075,16 @@ body.legacy-page {
                     <h2>检验记录列表</h2>
                     <button class="btn btn-primary" onclick="exportTests()">导出Excel报表</button>
                 </div>
+                <div class="test-chart-grid" style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:18px 0 22px;">
+                    <div style="border:1px solid var(--apple-border); border-radius:8px; padding:16px; min-height:280px;">
+                        <h3 style="font-size:16px; margin:0 0 12px;">复检结果占比</h3>
+                        <canvas id="admin-recheck-pie-chart" style="width:100%; height:220px; display:block;"></canvas>
+                    </div>
+                    <div style="border:1px solid var(--apple-border); border-radius:8px; padding:16px; min-height:280px;">
+                        <h3 style="font-size:16px; margin:0 0 12px;">复检结果数量</h3>
+                        <canvas id="admin-recheck-bar-chart" style="width:100%; height:220px; display:block;"></canvas>
+                    </div>
+                </div>
                 <table id="test-table">
                     <thead><tr>
                         <th>献血者姓名</th>
@@ -2922,8 +2932,10 @@ body.legacy-page {
             const tbody = document.getElementById('test-table-body');
             if (!result?.data?.length) {
                 tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">暂无数据</td></tr>';
+                renderAdminRecheckCharts([]);
                 return;
             }
+            renderAdminRecheckCharts(result.data);
             tbody.innerHTML = result.data.map(t => {
                 const donor = donorsMap[t.donorId] || {};
                 const collection = collectionsMap[t.collectionId] || {};
@@ -2987,14 +2999,21 @@ body.legacy-page {
                     <button type="button" class="btn" onclick="saveTest()">保存</button>
                 </form>
             `;
+            initTestEditRules();
             document.getElementById('edit-modal').style.display = 'flex';
         }
 
         async function saveTest() {
+            const recheckResult = document.getElementById('test-recheck-result').value;
+            const bloodStatus = document.getElementById('test-blood-status').value;
+            if (recheckResult && recheckResult !== '合格' && bloodStatus === '合格') {
+                document.getElementById('modal-message').innerHTML = '<div class="message error">复检结果不是合格时，血液状态只能为不合格</div>';
+                return;
+            }
             const data = {
                 testId: document.getElementById('test-id').value,
-                recheckResult: document.getElementById('test-recheck-result').value,
-                bloodStatus: document.getElementById('test-blood-status').value,
+                recheckResult: recheckResult,
+                bloodStatus: bloodStatus,
                 unqualifiedReason: document.getElementById('test-reason').value,
                 remark: document.getElementById('test-remark').value
             };
@@ -3008,6 +3027,136 @@ body.legacy-page {
             } else {
                 document.getElementById('modal-message').innerHTML = `<div class="message error">${result?.msg || '保存失败'}</div>`;
             }
+        }
+
+        function initTestEditRules() {
+            const recheckSelect = document.getElementById('test-recheck-result');
+            const statusSelect = document.getElementById('test-blood-status');
+            if (!recheckSelect || !statusSelect) return;
+            const sync = () => {
+                const mustBeUnqualified = recheckSelect.value && recheckSelect.value !== '合格';
+                Array.from(statusSelect.options).forEach(option => {
+                    option.disabled = mustBeUnqualified && option.value !== '不合格';
+                });
+                if (mustBeUnqualified) statusSelect.value = '不合格';
+            };
+            recheckSelect.addEventListener('change', sync);
+            statusSelect.addEventListener('change', sync);
+            sync();
+        }
+
+        const ADMIN_RECHECK_CHART_COLORS = ['#0071e3', '#34c759', '#ff9500', '#ff3b30', '#af52de', '#5ac8fa', '#8e8e93'];
+
+        function getAdminRecheckCounts(data) {
+            const counts = {};
+            (data || []).forEach(item => {
+                const result = (item.recheckResult || '').trim() || '未填写';
+                counts[result] = (counts[result] || 0) + 1;
+            });
+            return Object.entries(counts).map(([name, value]) => ({ name, value }));
+        }
+
+        function setupAdminChartCanvas(canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const ratio = window.devicePixelRatio || 1;
+            canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+            canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+            return { ctx, width: rect.width, height: rect.height };
+        }
+
+        function renderAdminRecheckCharts(data) {
+            const items = getAdminRecheckCounts(data);
+            drawAdminPieChart(document.getElementById('admin-recheck-pie-chart'), items);
+            drawAdminBarChart(document.getElementById('admin-recheck-bar-chart'), items);
+        }
+
+        function drawAdminEmptyChart(ctx, width, height) {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#8e8e93';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('暂无复检结果数据', width / 2, height / 2);
+        }
+
+        function drawAdminPieChart(canvas, items) {
+            if (!canvas) return;
+            const { ctx, width, height } = setupAdminChartCanvas(canvas);
+            ctx.clearRect(0, 0, width, height);
+            const total = items.reduce((sum, item) => sum + item.value, 0);
+            if (!total) {
+                drawAdminEmptyChart(ctx, width, height);
+                return;
+            }
+            const radius = Math.min(width * 0.24, height * 0.36);
+            const cx = width * 0.28;
+            const cy = height * 0.5;
+            let start = -Math.PI / 2;
+            items.forEach((item, index) => {
+                const angle = (item.value / total) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, radius, start, start + angle);
+                ctx.closePath();
+                ctx.fillStyle = ADMIN_RECHECK_CHART_COLORS[index % ADMIN_RECHECK_CHART_COLORS.length];
+                ctx.fill();
+                start += angle;
+            });
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            items.forEach((item, index) => {
+                const y = 24 + index * 24;
+                const percent = ((item.value / total) * 100).toFixed(1);
+                ctx.fillStyle = ADMIN_RECHECK_CHART_COLORS[index % ADMIN_RECHECK_CHART_COLORS.length];
+                ctx.fillRect(width * 0.58, y - 6, 12, 12);
+                ctx.fillStyle = '#1d1d1f';
+                ctx.fillText(`${item.name} ${percent}%`, width * 0.58 + 20, y);
+            });
+        }
+
+        function drawAdminBarChart(canvas, items) {
+            if (!canvas) return;
+            const { ctx, width, height } = setupAdminChartCanvas(canvas);
+            ctx.clearRect(0, 0, width, height);
+            if (!items.length) {
+                drawAdminEmptyChart(ctx, width, height);
+                return;
+            }
+            const max = Math.max(...items.map(item => item.value), 1);
+            const left = 42;
+            const right = 18;
+            const top = 18;
+            const bottom = 48;
+            const chartWidth = width - left - right;
+            const chartHeight = height - top - bottom;
+            const barWidth = Math.max(18, chartWidth / items.length * 0.5);
+            ctx.strokeStyle = '#d2d2d7';
+            ctx.beginPath();
+            ctx.moveTo(left, top);
+            ctx.lineTo(left, top + chartHeight);
+            ctx.lineTo(left + chartWidth, top + chartHeight);
+            ctx.stroke();
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            items.forEach((item, index) => {
+                const slot = chartWidth / items.length;
+                const x = left + slot * index + slot / 2 - barWidth / 2;
+                const barHeight = (item.value / max) * chartHeight;
+                const y = top + chartHeight - barHeight;
+                ctx.fillStyle = ADMIN_RECHECK_CHART_COLORS[index % ADMIN_RECHECK_CHART_COLORS.length];
+                ctx.fillRect(x, y, barWidth, barHeight);
+                ctx.fillStyle = '#1d1d1f';
+                ctx.fillText(item.value, x + barWidth / 2, Math.max(12, y - 8));
+                ctx.save();
+                ctx.translate(x + barWidth / 2, top + chartHeight + 12);
+                ctx.rotate(-Math.PI / 8);
+                ctx.fillStyle = '#6e6e73';
+                ctx.fillText(item.name.length > 8 ? item.name.slice(0, 8) + '…' : item.name, 0, 12);
+                ctx.restore();
+            });
         }
 
         async function deleteTest(id) {
