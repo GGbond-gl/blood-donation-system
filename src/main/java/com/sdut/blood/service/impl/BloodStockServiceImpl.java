@@ -2,6 +2,7 @@ package com.sdut.blood.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sdut.blood.common.constants.BloodConstants;
 import com.sdut.blood.common.exception.BusinessException;
 import com.sdut.blood.common.result.Result;
 import com.sdut.blood.domain.dto.StockInDTO;
@@ -14,7 +15,6 @@ import com.sdut.blood.domain.vo.StockTrendVO;
 import com.sdut.blood.domain.vo.StockWarningVO;
 import com.sdut.blood.mapper.BloodStockMapper;
 import com.sdut.blood.service.*;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
@@ -50,8 +50,8 @@ public class BloodStockServiceImpl extends ServiceImpl<BloodStockMapper, BloodSt
 
         // 2. 校验血液状态为合格
         BloodTest test = bloodTestService.getByCollectionId(dto.getCollectionId());
-        if (test == null || !"合格".equals(test.getBloodStatus())) {
-            throw new BusinessException("不合格血液无法入库，请核对后操作");
+        if (test == null || !BloodConstants.STATUS_QUALIFIED.equals(test.getBloodStatus())) {
+            throw new BusinessException("只有检验合格且未入库的血液可以入库，请核对后操作");
         }
 
         // 3. 校验有效期有效
@@ -69,6 +69,9 @@ public class BloodStockServiceImpl extends ServiceImpl<BloodStockMapper, BloodSt
 
         // 5. 获取血型
         Donor donor = donorService.getById(collection.getDonorId());
+        if (donor == null) {
+            throw new BusinessException("献血者信息不存在，请核对采血记录");
+        }
 
         // 6. 生成入库记录
         BloodStock stock = new BloodStock();
@@ -80,7 +83,7 @@ public class BloodStockServiceImpl extends ServiceImpl<BloodStockMapper, BloodSt
         save(stock);
 
         // 7. 更新检验记录状态为已入库
-        test.setBloodStatus("已入库");
+        test.setBloodStatus(BloodConstants.STATUS_STORED);
         bloodTestService.updateById(test);
     }
 
